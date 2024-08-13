@@ -215,6 +215,11 @@ func (v *Vault) GetEntries(cardType string, filters []string) ([]Card, error) {
 
 		card.RawValue = card.value
 
+		err = card.Decrypt()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not decrypt card value")
+		}
+
 		cards = append(cards, card)
 	}
 
