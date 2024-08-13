@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gdanko/enpass/pkg/enpass"
+	"github.com/markkurossi/tabulate"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
@@ -21,6 +22,15 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, flags *pflag.FlagSet,
 		yamlFlag   bool
 		yamlString string
 	)
+
+	// Remove decrypted if list
+	// Remove trashed if no trashed
+	for i, _ := range *cards {
+		if cmdType == "list" {
+			(*cards)[i].DecryptedValue = ""
+		}
+	}
+
 	// json
 	jsonFlag, err = flags.GetBool("json")
 	if err != nil {
@@ -57,22 +67,38 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, flags *pflag.FlagSet,
 		yamlString = strings.TrimSpace(yamlString)
 		fmt.Println(yamlString)
 	} else if listFlag {
-		length := 8
+		length := 10
 		for i, cardItem := range *cards {
 			fmt.Printf("%*s = %s\n", length, "title", cardItem.Title)
 			fmt.Printf("%*s = %s\n", length, "login", cardItem.Subtitle)
 			fmt.Printf("%*s = %s\n", length, "category", cardItem.Category)
+			fmt.Printf("%*s = %s\n", length, "note", cardItem.Note)
+			fmt.Printf("%*s = %v\n", length, "sensitive", cardItem.Sensitive)
+			fmt.Printf("%*s = %v\n", length, "raw", cardItem.RawValue)
 			if cmdType == "show" {
-				decrypted, err := cardItem.Decrypt()
-				if err != nil {
-					logger.WithError(err).Error("could not decrypt " + cardItem.Title)
-				} else {
-					fmt.Printf("%*s = %s: %s\n", length, "type", cardItem.Type, decrypted)
-				}
+				fmt.Printf("%*s = %s: %s\n", length, "type", cardItem.Type, cardItem.DecryptedValue)
 			}
 			if i < len(*cards)-1 {
 				fmt.Println()
 			}
 		}
+	} else {
+		tab := tabulate.New(tabulate.Simple)
+		tab.Header("title").SetAlign(tabulate.ML)
+		tab.Header("login").SetAlign(tabulate.ML)
+		tab.Header("category").SetAlign(tabulate.ML)
+		if cmdType == "show" {
+			tab.Header("decrypted").SetAlign(tabulate.ML)
+		}
+		for _, cardItem := range *cards {
+			row := tab.Row()
+			row.Column(cardItem.Title)
+			row.Column(cardItem.Subtitle)
+			row.Column(cardItem.Category)
+			if cmdType == "show" {
+				row.Column(fmt.Sprint("%s: %s", cardItem.Type, cardItem.DecryptedValue))
+			}
+		}
+		tab.Print(os.Stdout)
 	}
 }
