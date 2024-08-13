@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/gdanko/enpass/pkg/output"
+	"github.com/gdanko/enpass/util"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -27,11 +28,42 @@ func init() {
 }
 
 func showPreRunCmd(cmd *cobra.Command, args []string) error {
-	fmt.Println("showPreRun")
+	logger = logrus.New()
+
+	logLevel, err = logrus.ParseLevel(logLevelMap[logLevelStr])
+	if err != nil {
+		logrus.WithError(err).Fatal("invalid log level specified")
+	}
+	logger.SetLevel(logLevel)
+
 	return nil
 }
 
 func showRunCmd(cmd *cobra.Command, args []string) error {
-	fmt.Println("showRun")
+	vault, credentials, err = util.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		vault.Close()
+	}()
+	if err := vault.Open(credentials); err != nil {
+		logger.WithError(err).Error("could not open vault")
+		logger.Exit(2)
+	}
+	logger.Debug("opened vault")
+
+	cards, err := vault.GetEntries(cardType, []string{})
+	if err != nil {
+		panic(err)
+	}
+
+	if sort {
+		util.SortEntries(cards)
+	}
+
+	output.GenerateOutput(logger, "show", cmd.Flags(), &cards)
+
 	return nil
 }

@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/gdanko/enpass/pkg/output"
 	"github.com/gdanko/enpass/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -36,7 +35,6 @@ func listPreRunCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		logrus.WithError(err).Fatal("invalid log level specified")
 	}
-	fmt.Println(logLevel)
 	logger.SetLevel(logLevel)
 
 	return nil
@@ -66,19 +64,7 @@ func listRunCmd(cmd *cobra.Command, args []string) error {
 		util.SortEntries(cards)
 	}
 
-	for _, card := range cards {
-		if card.IsTrashed() && !trashed {
-			continue
-		}
-		logger.Printf(
-			"> title: %s"+
-				"  login: %s"+
-				"  cat.: %s",
-			card.Title,
-			card.Subtitle,
-			card.Category,
-		)
-	}
+	output.GenerateOutput(logger, "list", cmd.Flags(), &cards)
 
 	return nil
 }
