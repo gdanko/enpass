@@ -60,21 +60,22 @@ import (
 
 type Card struct {
 	// plaintext
-	UUID      string
-	CreatedAt int64
-	Type      string
-	UpdatedAt int64
-	Title     string
-	Subtitle  string
-	Note      string
-	Trashed   int64
-	Deleted   int64
-	Category  string
-	Label     string
-	LastUsed  int64
-	Sensitive bool
-	Icon      string
-	RawValue  string
+	UUID           string
+	CreatedAt      int64
+	Type           string
+	UpdatedAt      int64
+	Title          string
+	Subtitle       string
+	Note           string
+	Trashed        int64
+	Deleted        int64
+	Category       string
+	Label          string
+	LastUsed       int64
+	Sensitive      bool
+	Icon           string
+	RawValue       string
+	DecryptedValue string
 
 	// encrypted
 	value   string
@@ -89,15 +90,15 @@ func (c *Card) IsDeleted() bool {
 	return c.Deleted != 0
 }
 
-func (c *Card) Decrypt() (string, error) {
+func (c *Card) Decrypt() error {
 	// Intercept item fields without value
 	if len(c.value) == 0 {
-		return "", nil
+		return nil
 	}
 
 	// Intercept non-password item fields, their value isn't encrypted
 	if c.Type != "password" {
-		return c.value, nil
+		return nil
 	}
 
 	// The key object is saved in binary from and actually consists of the
@@ -108,39 +109,41 @@ func (c *Card) Decrypt() (string, error) {
 	// If you deleted an item from Enpass, it stays in the database, but the
 	// entries are cleared
 	if len(nonce) == 0 {
-		return "", errors.New("this item has been deleted")
+		errors.New("this item has been deleted")
 	}
 
 	// The value object holds the ciphertext (same length as plaintext) +
 	// (authentication) tag (16 bytes) and is stored in hex
 	ciphertextAndTag, err := hex.DecodeString(c.value)
 	if err != nil {
-		return "", errors.Wrap(err, "could not decode card hex cipherstring")
+		errors.Wrap(err, "could not decode card hex cipherstring")
 	}
 
 	// As additional authenticated data (AAD) they use the UUID but without
 	// the dashes: e.g. a2ec30c0aeed41f7aed7cc50e69ff506
 	header, err := hex.DecodeString(strings.ReplaceAll(c.UUID, "-", ""))
 	if err != nil {
-		return "", errors.Wrap(err, "could not decode card hex AAD")
+		return errors.Wrap(err, "could not decode card hex AAD")
 	}
 
 	// Now we can initialize, decrypt the ciphertext and verify the AAD.
 	// You can compare the SHA-1 output with the value stored in the db
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", errors.Wrap(err, "could not initialize card cipher")
+		return errors.Wrap(err, "could not initialize card cipher")
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", errors.Wrap(err, "could not initialize GCM block")
+		return errors.Wrap(err, "could not initialize GCM block")
 	}
 
 	plaintext, err := aesgcm.Open(nil, nonce, ciphertextAndTag, header)
 	if err != nil {
-		return "", errors.Wrap(err, "could not decrypt data")
+		return errors.Wrap(err, "could not decrypt data")
 	}
 
-	return string(plaintext), nil
+	c.DecryptedValue = string(plaintext)
+
+	return nil
 }
