@@ -24,6 +24,11 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, flags *pflag.FlagSet,
 		yamlString  string
 	)
 
+	if len(*cards) <= 0 {
+		fmt.Println("No cards found matching the specified criteria")
+		os.Exit(0)
+	}
+
 	jsonFlag, err = flags.GetBool("json")
 	if err != nil {
 		fmt.Println(err.Error())
