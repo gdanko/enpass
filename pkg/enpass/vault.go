@@ -241,12 +241,12 @@ func (v *Vault) Close() {
 }
 
 // GetEntries : return the cardType entries in the Enpass database filtered by filters.
-func (v *Vault) GetEntries(cardType string, filters []string) ([]Card, error) {
+func (v *Vault) GetEntries(cardType string, cardCategory string, filters []string) ([]Card, error) {
 	if v.db == nil || v.vaultInfo.VaultName == "" {
 		return nil, errors.New("vault is not initialized")
 	}
 
-	rows, err := v.executeEntryQuery(cardType, filters)
+	rows, err := v.executeEntryQuery(cardType, cardCategory, filters)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
@@ -278,8 +278,8 @@ func (v *Vault) GetEntries(cardType string, filters []string) ([]Card, error) {
 	return cards, nil
 }
 
-func (v *Vault) GetEntry(cardType string, filters []string, unique bool) (*Card, error) {
-	cards, err := v.GetEntries(cardType, filters)
+func (v *Vault) GetEntry(cardType string, cardCategory string, filters []string, unique bool) (*Card, error) {
+	cards, err := v.GetEntries(cardType, cardCategory, filters)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards")
 	}
@@ -304,7 +304,7 @@ func (v *Vault) GetEntry(cardType string, filters []string, unique bool) (*Card,
 	return ret, nil
 }
 
-func (v *Vault) executeEntryQuery(cardType string, filters []string) (*sql.Rows, error) {
+func (v *Vault) executeEntryQuery(cardType string, cardCategory string, filters []string) (*sql.Rows, error) {
 	query := `
 		SELECT uuid, type, created_at, field_updated_at, title,
 		       subtitle, note, trashed, item.deleted, category,
@@ -319,6 +319,11 @@ func (v *Vault) executeEntryQuery(cardType string, filters []string) (*sql.Rows,
 	if cardType != "" {
 		where = append(where, "type = ?")
 		values = append(values, cardType)
+	}
+
+	if cardCategory != "" {
+		where = append(where, "category = ?")
+		values = append(values, "identity")
 	}
 
 	filterWhere := []string{}

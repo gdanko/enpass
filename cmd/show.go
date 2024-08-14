@@ -72,7 +72,7 @@ func showRunCmd(cmd *cobra.Command, args []string) error {
 	}
 	logger.Debug("opened vault")
 
-	cards, err := vault.GetEntries(cardType, filters)
+	cards, err := vault.GetEntries(cardType, cardCategory, filters)
 	if err != nil {
 		return err
 	}
