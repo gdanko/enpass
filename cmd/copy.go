@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gdanko/enpass/pkg/clipboard"
+	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/gdanko/enpass/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -29,7 +30,6 @@ func init() {
 
 func copyPreRunCmd(cmd *cobra.Command, args []string) error {
 	logger = logrus.New()
-
 	logLevel, err = logrus.ParseLevel(logLevelMap[logLevelStr])
 	if err != nil {
 		logrus.WithError(err).Fatal("invalid log level specified")
@@ -46,6 +46,18 @@ func copyPreRunCmd(cmd *cobra.Command, args []string) error {
 }
 
 func copyRunCmd(cmd *cobra.Command, args []string) error {
+	if vaultPath == "" {
+		vaultPath, err = enpass.FindDefaultVaultPath()
+		if err != nil {
+			return err
+		}
+	}
+
+	err = enpass.ValidateVaultPath(vaultPath)
+	if err != nil {
+		return err
+	}
+
 	vault, credentials, err = util.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel)
 	if err != nil {
 		return err

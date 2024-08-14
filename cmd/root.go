@@ -54,5 +54,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&pinEnable, "pin", false, "Enable PIN")
 	rootCmd.PersistentFlags().BoolVar(&filtersAnd, "and", false, "Combines filters with AND instead of default OR")
 	// rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Run enpass in debug mode")
-	rootCmd.MarkPersistentFlagRequired("vault")
+	// rootCmd.MarkPersistentFlagRequired("vault")
 }
