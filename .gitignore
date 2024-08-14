@@ -21,7 +21,8 @@
 go.work
 go.work.sum
 
-# Package-specific files
+# Packeage-specific files
+.vscode
 enpass
 linux
 darwin
