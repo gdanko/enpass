@@ -7,17 +7,20 @@ import (
 )
 
 var (
-	cardType        string
-	credentials     *enpass.VaultCredentials
-	debug           bool
-	defaultLogLevel string
-	err             error
-	keyFilePath     string
-	jsonFlag        bool
-	listFlag        bool
-	logLevel        logrus.Level
-	logLevelStr     = "4"
-	logLevelMap     = map[string]string{
+	cardType         string
+	clipboardPrimary bool
+	credentials      *enpass.VaultCredentials
+	debug            bool
+	defaultLogLevel  string
+	err              error
+	filters          []string
+	filtersAnd       bool
+	keyFilePath      string
+	jsonFlag         bool
+	listFlag         bool
+	logLevel         logrus.Level
+	logLevelStr      = "4"
+	logLevelMap      = map[string]string{
 		"5": "debug",
 		"4": "info",
 		"3": "warn",
@@ -43,12 +46,13 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Run enpass in debug mode")
-	rootCmd.PersistentFlags().StringVarP(&cardType, "type", "t", "password", "The type of your card. (password, ...)")
 	rootCmd.PersistentFlags().StringVarP(&vaultPath, "vault", "v", "", "Path to your Enpass vault")
+	rootCmd.PersistentFlags().StringVarP(&cardType, "type", "t", "password", "The type of your card. (password, ...)")
 	rootCmd.PersistentFlags().StringVarP(&keyFilePath, "keyfile", "k", "", "Path to your Enpass vault keyfile")
-	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "nonInteractive", false, "Disable prompts and fail instead.")
 	rootCmd.PersistentFlags().StringVar(&defaultLogLevel, "log", "4", "The log level from debug (5) to panic (1)")
+	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "nonInteractive", false, "Disable prompts and fail instead.")
 	rootCmd.PersistentFlags().BoolVar(&pinEnable, "pin", false, "Enable PIN")
+	rootCmd.PersistentFlags().BoolVar(&filtersAnd, "and", false, "Combines filters with AND instead of default OR")
+	// rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Run enpass in debug mode")
 	rootCmd.MarkPersistentFlagRequired("vault")
 }
