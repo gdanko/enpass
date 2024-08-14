@@ -1,6 +1,7 @@
 # enpass
 
-## I wrote some Python scripts to manipulate my Enpass database, but I wanted to do more. I wanted a portable binary that can be used to read and parse my Enpass data. There is already an amazing project [here](https://github.com/hazcod/enpass-cli.git), but I wanted to make the CLI a little more intuitive and add some features to it. I borrowed the logic from hazcod's project and used Cobra to build the CLI.
+## Introduction
+I wrote some Python scripts to manipulate my Enpass database, but I wanted to do more. I wanted a portable binary that can be used to read and parse my Enpass data. There is already an amazing project [here](https://github.com/hazcod/enpass-cli.git), but I wanted to make the CLI a little more intuitive and add some features to it. I borrowed the logic from hazcod's project and used Cobra to build the CLI.
 
 ## Requirements
 * golang 1.22+
