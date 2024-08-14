@@ -23,3 +23,6 @@ go.work.sum
 
 # Package-specific files
 enpass
+linux
+darwin
+*.tgz
