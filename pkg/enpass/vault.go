@@ -5,10 +5,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	// sqlcipher is necessary for sqlite crypto support
+
 	_ "github.com/mutecomm/go-sqlcipher"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -54,6 +57,55 @@ type VaultCredentials struct {
 
 func (credentials *VaultCredentials) IsComplete() bool {
 	return credentials.Password != "" || credentials.DBKey != nil
+}
+
+// FileOrDirectoryExists : Determine if a file or directory exists
+func FileOrDirectoryExists(path string) (exists bool, err error) {
+	_, err = os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+
+	if os.IsNotExist(err) {
+		return false, err
+	}
+	return false, err
+}
+
+// FindDefaultVaultPath : Try to programatically determine the vault path based on the default path value
+func FindDefaultVaultPath() (vaultPath string, err error) {
+	userObj, err := user.Current()
+	if err != nil {
+		return "", fmt.Errorf("failed to determine the path of your home directory: %s", err)
+	}
+	vaultPath = filepath.Join(userObj.HomeDir, "Documents/Enpass/Vaults/primary")
+	return vaultPath, nil
+}
+
+// ValidateVaultPath : Try to validate the specified vault path
+func ValidateVaultPath(vaultPath string) (err error) {
+	var exists bool
+
+	vaultFile1 := filepath.Join(vaultPath, "vault.enpassdb")
+	vaultFile2 := filepath.Join(vaultPath, "vault.json")
+
+	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+		exists, err = FileOrDirectoryExists(vaultPath)
+		if !exists && err != nil {
+			return fmt.Errorf("the vault path \"%s\" does not exist - please use the --vault flag", vaultPath)
+		}
+
+		exists, err = FileOrDirectoryExists(vaultFile1)
+		if !exists && err != nil {
+			return fmt.Errorf("the vault file \"%s\" does not exist - please use the --vault flag", vaultFile1)
+		}
+
+		exists, err = FileOrDirectoryExists(vaultFile2)
+		if !exists && err != nil {
+			return fmt.Errorf("the vault file \"%s\" does not exist - please use the --vault flag", vaultFile2)
+		}
+	}
+	return nil
 }
 
 // NewVault : Create new instance of vault and load vault info
