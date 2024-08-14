@@ -86,8 +86,8 @@ func FindDefaultVaultPath() (vaultPath string, err error) {
 func ValidateVaultPath(vaultPath string) (err error) {
 	var exists bool
 
-	vaultFile1 := filepath.Join(vaultPath, "vault.enpassdb")
-	vaultFile2 := filepath.Join(vaultPath, "vault.json")
+	vaultFile1 := filepath.Join(vaultPath, vaultFileName)
+	vaultFile2 := filepath.Join(vaultPath, vaultInfoFileName)
 
 	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
 		exists, err = FileOrDirectoryExists(vaultPath)
