@@ -36,6 +36,12 @@ func showPreRunCmd(cmd *cobra.Command, args []string) error {
 	}
 	logger.SetLevel(logLevel)
 
+	if len(cmd.Flags().Args()) > 0 {
+		filters = cmd.Flags().Args()[0:]
+	} else {
+		filters = []string{}
+	}
+
 	return nil
 }
 
@@ -54,9 +60,9 @@ func showRunCmd(cmd *cobra.Command, args []string) error {
 	}
 	logger.Debug("opened vault")
 
-	cards, err := vault.GetEntries(cardType, []string{})
+	cards, err := vault.GetEntries(cardType, filters)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if sort {
