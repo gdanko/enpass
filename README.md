@@ -60,12 +60,12 @@ Enter vault password:
         "created": 1722787097,
         "card_type": "password",
         "updated": 1722787097,
-        "title": "Ticketmaster",
+        "title": "Foo",
         "subtitle": "user@example.com",
         "category": "login",
         "label": "Password",
         "sensitive": true,
-        "icon": "{\"fav\":\"ticketmaster.com\",\"image\":{\"file\":\"misc/login\"},\"type\":1,\"uuid\":\"\"}",
+        "icon": "{\"fav\":\"foo.com\",\"image\":{\"file\":\"misc/login\"},\"type\":1,\"uuid\":\"\"}",
         "raw_value": "xxxxxxx"
     }
 ]
