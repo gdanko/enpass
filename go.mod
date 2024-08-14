@@ -3,6 +3,7 @@ module github.com/gdanko/enpass
 go 1.22.2
 
 require (
+	github.com/atotto/clipboard v0.1.4
 	github.com/markkurossi/tabulate v0.0.0-20230223130100-d4965869b123
 	github.com/miquella/ask v1.0.0
 	github.com/mutecomm/go-sqlcipher v0.0.0-20190227152316-55dbde17881f
