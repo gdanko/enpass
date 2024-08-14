@@ -61,8 +61,8 @@ import (
 type Card struct {
 	// plaintext
 	UUID           string `json:"uuid,omitempty" yaml:"uuid,omitempty"`
-	CreatedAt      int64  `json:"created,omitempty,omitempty" yaml:"created,omitempty"`
-	Type           string `json:"card_type,omitempty,omitempty" yaml:"card_type,omitempty"`
+	CreatedAt      int64  `json:"created,omitempty" yaml:"created,omitempty"`
+	Type           string `json:"card_type,omitempty" yaml:"card_type,omitempty"`
 	UpdatedAt      int64  `json:"updated,omitempty" yaml:"updated,omitempty"`
 	Title          string `json:"title,omitempty" yaml:"title,omitempty"`
 	Subtitle       string `json:"subtitle,omitempty" yaml:"subtitle,omitempty"`
