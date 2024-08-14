@@ -60,22 +60,22 @@ import (
 
 type Card struct {
 	// plaintext
-	UUID           string
-	CreatedAt      int64
-	Type           string
-	UpdatedAt      int64
-	Title          string
-	Subtitle       string
-	Note           string
-	Trashed        int64
-	Deleted        int64
-	Category       string
-	Label          string
-	LastUsed       int64
-	Sensitive      bool
-	Icon           string
-	RawValue       string
-	DecryptedValue string
+	UUID           string `json:"uuid,omitempty" yaml:"uuid,omitempty"`
+	CreatedAt      int64  `json:"created,omitempty,omitempty" yaml:"created,omitempty"`
+	Type           string `json:"card_type,omitempty,omitempty" yaml:"card_type,omitempty"`
+	UpdatedAt      int64  `json:"updated,omitempty" yaml:"updated,omitempty"`
+	Title          string `json:"title,omitempty" yaml:"title,omitempty"`
+	Subtitle       string `json:"subtitle,omitempty" yaml:"subtitle,omitempty"`
+	Note           string `json:"note,omitempty" yaml:"note,omitempty"`
+	Trashed        int64  `json:"trashed,omitempty" yaml:"trashed,omitempty"`
+	Deleted        int64  `json:"deleted,omitempty" yaml:"deleted,omitempty"`
+	Category       string `json:"category,omitempty" yaml:"category,omitempty"`
+	Label          string `json:"label,omitempty" yaml:"label,omitempty"`
+	LastUsed       int64  `json:"last_used,omitempty" yaml:"last_used,omitempty"`
+	Sensitive      bool   `json:"sensitive,omitempty" yaml:"sensitive,omitempty"`
+	Icon           string `json:"icon,omitempty" yaml:"icon,omitempty"`
+	RawValue       string `json:"raw_value,omitempty" yaml:"raw_value,omitempty"`
+	DecryptedValue string `json:"decrypted_value,omitempty" yaml:"decrypted_value,omitempty"`
 
 	// encrypted
 	value   string
