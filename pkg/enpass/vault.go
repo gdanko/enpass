@@ -358,7 +358,5 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, filter
 
 	query += " WHERE " + strings.Join(where, " AND ")
 	v.logger.Trace("query: ", query)
-	fmt.Println(query)
-	fmt.Println(values)
 	return v.db.Query(query, values...)
 }
