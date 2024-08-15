@@ -19,6 +19,7 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, flags *pflag.FlagSet,
 		err         error
 		jsonFlag    bool
 		listFlag    bool
+		tableFlag   bool
 		trashedFlag bool
 		yamlFlag    bool
 		yamlString  string
@@ -42,6 +43,12 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, flags *pflag.FlagSet,
 	}
 
 	yamlFlag, err = flags.GetBool("yaml")
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	tableFlag, err = flags.GetBool("table")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -104,7 +111,7 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, flags *pflag.FlagSet,
 				fmt.Println()
 			}
 		}
-	} else {
+	} else if tableFlag {
 		tab := tabulate.New(tabulate.Simple)
 		tab.Header("title").SetAlign(tabulate.ML)
 		tab.Header("login").SetAlign(tabulate.ML)
@@ -123,5 +130,25 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, flags *pflag.FlagSet,
 			}
 		}
 		tab.Print(os.Stdout)
+	} else {
+		for _, cardItem := range *cards {
+			if cmdType == "list" {
+				logger.Printf(
+					"> title: %s, login: %s, category: %s",
+					cardItem.Title,
+					cardItem.Subtitle,
+					cardItem.Category,
+				)
+			} else if cmdType == "show" {
+				logger.Printf(
+					"> title: %s, login: %s, category: %s, %s: %s",
+					cardItem.Title,
+					cardItem.Subtitle,
+					cardItem.Category,
+					cardItem.Type,
+					cardItem.DecryptedValue,
+				)
+			}
+		}
 	}
 }

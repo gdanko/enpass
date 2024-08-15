@@ -35,6 +35,7 @@ var (
 		Long:  "enpass is a command line interface for the Enpass password manager",
 	}
 	sort      bool
+	tableFlag bool
 	trashed   bool
 	vault     *enpass.Vault
 	vaultPath = "/home/gdanko/Documents/Enpass/Vaults/primary"
@@ -47,7 +48,7 @@ func Execute() error {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&vaultPath, "vault", "v", "", "Path to your Enpass vault")
-	rootCmd.PersistentFlags().StringVarP(&cardType, "type", "t", "password", "The type of your card. (password, ...)")
+	rootCmd.PersistentFlags().StringVar(&cardType, "type", "password", "The type of your card. (password, ...)")
 	rootCmd.PersistentFlags().StringArrayVarP(&cardCategory, "category", "c", []string{}, "The category of your card. Can be used multiple times.")
 	rootCmd.PersistentFlags().StringVarP(&keyFilePath, "keyfile", "k", "", "Path to your Enpass vault keyfile.")
 	rootCmd.PersistentFlags().StringVar(&defaultLogLevel, "log", "4", "The log level from debug (5) to panic (1).")

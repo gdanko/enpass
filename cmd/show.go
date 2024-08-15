@@ -25,6 +25,7 @@ func init() {
 	showCmd.Flags().BoolVarP(&jsonFlag, "json", "j", false, "Output the data as JSON.")
 	showCmd.Flags().BoolVarP(&listFlag, "list", "l", false, "Output the data as list, similar to SQLite line mode.")
 	showCmd.Flags().BoolVarP(&yamlFlag, "yaml", "y", false, "Output the data as YAML.")
+	showCmd.Flags().BoolVarP(&tableFlag, "table", "t", false, "Output the data as a table.")
 	rootCmd.AddCommand(showCmd)
 }
 
