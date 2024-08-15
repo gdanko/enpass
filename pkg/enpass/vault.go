@@ -339,41 +339,31 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, cardTi
 	}
 
 	if len(cardCategory) > 0 {
-		if len(cardCategory) == 1 {
-			categoryItem := cardCategory[0]
-			if strings.HasPrefix(categoryItem, "%") || strings.HasSuffix(categoryItem, "%") {
-				where = append(where, "category LIKE ?")
+		var orSlice []string
+		for _, value := range cardCategory {
+			if strings.HasPrefix(value, "%") || strings.HasSuffix(value, "%") {
+				orSlice = append(orSlice, "category LIKE ?")
+				values = append(values, value)
 			} else {
-				where = append(where, "category = ?")
+				orSlice = append(orSlice, "category = ?")
+				values = append(values, value)
 			}
-			values = append(values, categoryItem)
-		} else {
-			cardCategoryInterface := make([]interface{}, len(cardCategory))
-			for _, value := range cardCategory {
-				cardCategoryInterface = append(cardCategoryInterface, value)
-			}
-			where = append(where, fmt.Sprintf("category IN (?%s)", strings.Repeat(",?", len(cardCategoryInterface)-1)))
-			values = append(values, cardCategoryInterface...)
 		}
+		where = append(where, fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")))
 	}
 
 	if len(cardTitle) > 0 {
-		if len(cardTitle) == 1 {
-			titleItem := cardTitle[0]
-			if strings.HasPrefix(titleItem, "%") || strings.HasSuffix(titleItem, "%") {
-				where = append(where, "title LIKE ?")
+		var orSlice []string
+		for _, value := range cardTitle {
+			if strings.HasPrefix(value, "%") || strings.HasSuffix(value, "%") {
+				orSlice = append(orSlice, "title LIKE ?")
+				values = append(values, value)
 			} else {
-				where = append(where, "title = ?")
+				orSlice = append(orSlice, "title = ?")
+				values = append(values, value)
 			}
-			values = append(values, cardTitle[0])
-		} else {
-			cardTitleInterface := make([]interface{}, len(cardTitle))
-			for _, value := range cardTitle {
-				cardTitleInterface = append(cardTitleInterface, value)
-			}
-			where = append(where, fmt.Sprintf("title IN (?%s)", strings.Repeat(",?", len(cardTitleInterface)-1)))
-			values = append(values, cardTitleInterface...)
 		}
+		where = append(where, fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")))
 	}
 
 	query += " WHERE " + strings.Join(where, " AND ")
