@@ -37,14 +37,15 @@ Available Commands:
   version     Print the current enpass version
 
 Flags:
-      --and              Combines filters with AND instead of default OR
-  -h, --help             help for enpass
-  -k, --keyfile string   Path to your Enpass vault keyfile
-      --log string       The log level from debug (5) to panic (1) (default "4")
-      --nonInteractive   Disable prompts and fail instead.
-      --pin              Enable PIN
-  -t, --type string      The type of your card. (password, ...) (default "password")
-  -v, --vault string     Path to your Enpass vault
+      --and                    Combines filters with AND instead of default OR.
+  -c, --category stringArray   The category of your card. Can be used multiple times.
+  -h, --help                   help for enpass
+  -k, --keyfile string         Path to your Enpass vault keyfile.
+      --log string             The log level from debug (5) to panic (1). (default "4")
+      --nonInteractive         Disable prompts and fail instead.
+      --pin                    Enable PIN.
+      --type string            The type of your card. (password, ...) (default "password")
+  -v, --vault string           Path to your Enpass vault
 
 Use "enpass [command] --help" for more information about a command.
 ```
