@@ -37,11 +37,7 @@ var (
 	}
 	tableFlag   bool
 	trashedFlag bool
-	validFields = []string{
-		"category",
-		"login",
-		"title",
-	}
+
 	vault       *enpass.Vault
 	vaultPath   string
 	versionFull bool
