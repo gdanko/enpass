@@ -12,8 +12,8 @@ import (
 var (
 	passCmd = &cobra.Command{
 		Use:          "pass",
-		Short:        "Print the password of a vault entry matching FILTER to stdout",
-		Long:         "Print the password of a vault entry matching FILTER to stdout",
+		Short:        "Print the password of a vault entry to STDOUT",
+		Long:         "Print the password of a vault entry to STDOUT",
 		PreRunE:      passPreRunCmd,
 		RunE:         passRunCmd,
 		SilenceUsage: true,
@@ -21,6 +21,7 @@ var (
 )
 
 func init() {
+	GetPassFlags(passCmd)
 	rootCmd.AddCommand(passCmd)
 }
 
@@ -31,12 +32,6 @@ func passPreRunCmd(cmd *cobra.Command, args []string) error {
 		logrus.WithError(err).Fatal("invalid log level specified")
 	}
 	logger.SetLevel(logLevel)
-
-	if len(cmd.Flags().Args()) > 0 {
-		filters = cmd.Flags().Args()[0:]
-	} else {
-		filters = []string{}
-	}
 
 	return nil
 }
@@ -68,7 +63,7 @@ func passRunCmd(cmd *cobra.Command, args []string) error {
 	}
 	logger.Debug("opened vault")
 
-	card, err := vault.GetEntry(cardType, cardCategory, filters, true)
+	card, err := vault.GetEntry(cardType, cardCategory, cardTitle, caseSensitive, orderbyFlag, true)
 	if err != nil {
 		return err
 	}

@@ -14,8 +14,8 @@ import (
 var (
 	copyCmd = &cobra.Command{
 		Use:          "copy",
-		Short:        "Copy the password of a vault entry matching FILTER to the clipboard",
-		Long:         "Copy the password of a vault entry matching FILTER to the clipboard",
+		Short:        "Copy the password of a vault entry to the clipboard",
+		Long:         "Copy the password of a vault entry to the clipboard",
 		PreRunE:      copyPreRunCmd,
 		RunE:         copyRunCmd,
 		SilenceUsage: true,
@@ -23,8 +23,7 @@ var (
 )
 
 func init() {
-	// copyCmd.Flags().BoolVar(&trashed, "trashed", false, "Show trashed items")
-	copyCmd.Flags().BoolVar(&clipboardPrimary, "clipboardPrimary", false, "Use primary X selection instead of clipboard.")
+	GetCopyFlags(copyCmd)
 	rootCmd.AddCommand(copyCmd)
 }
 
@@ -35,12 +34,6 @@ func copyPreRunCmd(cmd *cobra.Command, args []string) error {
 		logrus.WithError(err).Fatal("invalid log level specified")
 	}
 	logger.SetLevel(logLevel)
-
-	if len(cmd.Flags().Args()) > 0 {
-		filters = cmd.Flags().Args()[0:]
-	} else {
-		filters = []string{}
-	}
 
 	return nil
 }
@@ -72,7 +65,7 @@ func copyRunCmd(cmd *cobra.Command, args []string) error {
 	}
 	logger.Debug("opened vault")
 
-	card, err := vault.GetEntry(cardType, cardCategory, filters, true)
+	card, err := vault.GetEntry(cardType, cardCategory, cardTitle, caseSensitive, orderbyFlag, true)
 	if err != nil {
 		return err
 	}

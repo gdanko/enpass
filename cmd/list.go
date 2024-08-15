@@ -11,8 +11,8 @@ import (
 var (
 	listCmd = &cobra.Command{
 		Use:          "list",
-		Short:        "List vault entries matching FILTER without password",
-		Long:         "List vault entries matching FILTER without password",
+		Short:        "List vault entries without displaying the password",
+		Long:         "List vault entries without displaying the password",
 		PreRunE:      listPreRunCmd,
 		RunE:         listRunCmd,
 		SilenceUsage: true,
@@ -21,12 +21,7 @@ var (
 )
 
 func init() {
-	listCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Sort the output by title and username.")
-	listCmd.Flags().BoolVar(&trashed, "trashed", false, "Show trashed items.")
-	listCmd.Flags().BoolVarP(&jsonFlag, "json", "j", false, "Output the data as JSON.")
-	listCmd.Flags().BoolVarP(&listFlag, "list", "l", false, "Output the data as list, similar to SQLite line mode.")
-	listCmd.Flags().BoolVarP(&yamlFlag, "yaml", "y", false, "Output the data as YAML.")
-	listCmd.Flags().BoolVarP(&tableFlag, "table", "t", false, "Output the data as a table.")
+	GetListFlags(listCmd)
 	rootCmd.AddCommand(listCmd)
 }
 
@@ -37,12 +32,6 @@ func listPreRunCmd(cmd *cobra.Command, args []string) error {
 		logrus.WithError(err).Fatal("invalid log level specified")
 	}
 	logger.SetLevel(logLevel)
-
-	if len(cmd.Flags().Args()) > 0 {
-		filters = cmd.Flags().Args()[0:]
-	} else {
-		filters = []string{}
-	}
 
 	return nil
 }
@@ -74,16 +63,12 @@ func listRunCmd(cmd *cobra.Command, args []string) error {
 	}
 	logger.Debug("opened vault")
 
-	cards, err := vault.GetEntries(cardType, cardCategory, filters)
+	cards, err := vault.GetEntries(cardType, cardCategory, cardTitle, caseSensitive, orderbyFlag)
 	if err != nil {
 		return err
 	}
 
-	if sort {
-		util.SortEntries(cards)
-	}
-
-	output.GenerateOutput(logger, "list", cmd.Flags(), &cards)
+	output.GenerateOutput(logger, "list", jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, &cards)
 
 	return nil
 }
