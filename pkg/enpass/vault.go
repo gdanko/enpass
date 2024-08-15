@@ -72,6 +72,15 @@ func FileOrDirectoryExists(path string) (exists bool, err error) {
 	return false, err
 }
 
+// QuoteList - quote a list for use in a database IN clause
+func QuoteList(items []string) string {
+	quoted := []string{}
+	for _, item := range items {
+		quoted = append(quoted, fmt.Sprintf("\"%s\"", item))
+	}
+	return strings.Join(quoted, ",")
+}
+
 // FindDefaultVaultPath : Try to programatically determine the vault path based on the default path value
 func FindDefaultVaultPath() (vaultPath string, err error) {
 	userObj, err := user.Current()
@@ -241,7 +250,7 @@ func (v *Vault) Close() {
 }
 
 // GetEntries : return the cardType entries in the Enpass database filtered by filters.
-func (v *Vault) GetEntries(cardType string, cardCategory string, filters []string) ([]Card, error) {
+func (v *Vault) GetEntries(cardType string, cardCategory []string, filters []string) ([]Card, error) {
 	if v.db == nil || v.vaultInfo.VaultName == "" {
 		return nil, errors.New("vault is not initialized")
 	}
@@ -278,7 +287,7 @@ func (v *Vault) GetEntries(cardType string, cardCategory string, filters []strin
 	return cards, nil
 }
 
-func (v *Vault) GetEntry(cardType string, cardCategory string, filters []string, unique bool) (*Card, error) {
+func (v *Vault) GetEntry(cardType string, cardCategory []string, filters []string, unique bool) (*Card, error) {
 	cards, err := v.GetEntries(cardType, cardCategory, filters)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards")
@@ -304,7 +313,7 @@ func (v *Vault) GetEntry(cardType string, cardCategory string, filters []string,
 	return ret, nil
 }
 
-func (v *Vault) executeEntryQuery(cardType string, cardCategory string, filters []string) (*sql.Rows, error) {
+func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, filters []string) (*sql.Rows, error) {
 	query := `
 		SELECT uuid, type, created_at, field_updated_at, title,
 		       subtitle, note, trashed, item.deleted, category,
@@ -321,9 +330,13 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory string, filters 
 		values = append(values, cardType)
 	}
 
-	if cardCategory != "" {
-		where = append(where, "category = ?")
-		values = append(values, "identity")
+	if len(cardCategory) > 0 {
+		cardCategoryInterface := make([]interface{}, len(cardCategory))
+		for _, value := range cardCategory {
+			cardCategoryInterface = append(cardCategoryInterface, value)
+		}
+		where = append(where, fmt.Sprintf("category IN (?%s)", strings.Repeat(",?", len(cardCategoryInterface)-1)))
+		values = append(values, cardCategoryInterface...)
 	}
 
 	filterWhere := []string{}
@@ -345,5 +358,7 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory string, filters 
 
 	query += " WHERE " + strings.Join(where, " AND ")
 	v.logger.Trace("query: ", query)
+	fmt.Println(query)
+	fmt.Println(values)
 	return v.db.Query(query, values...)
 }
