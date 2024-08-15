@@ -39,14 +39,14 @@ Available Commands:
   version     Print the current enpass version
 
 Flags:
-  -c, --category stringArray   Filter based on entry category. Can be used multiple times.
+  -c, --category stringArray   Filter based on entry category. Wildcards (%) are allowed. Can be used multiple times.
   -h, --help                   help for enpass
   -k, --keyfile string         Path to your Enpass vault keyfile.
   -l, --log string             The log level from debug (5) to panic (1). (default "4")
   -n, --nonInteractive         Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
-  -t, --title stringArray      Filter based on entry title. Can be used multiple times.
+  -t, --title stringArray      Filter based on entry title. Wildcards (%) are allowed. Can be used multiple times.
       --type string            The type of your card. (password, ...) (default "password")
   -v, --vault string           Path to your Enpass vault.
 
@@ -70,13 +70,13 @@ Flags:
       --yaml                  Output the data as YAML.
 
 Global Flags:
-  -c, --category stringArray   Filter based on entry category. Can be used multiple times.
+  -c, --category stringArray   Filter based on entry category. Wildcards (%) are allowed. Can be used multiple times.
   -k, --keyfile string         Path to your Enpass vault keyfile.
   -l, --log string             The log level from debug (5) to panic (1). (default "4")
   -n, --nonInteractive         Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
-  -t, --title stringArray      Filter based on entry title. Can be used multiple times.
+  -t, --title stringArray      Filter based on entry title. Wildcards (%) are allowed. Can be used multiple times.
       --type string            The type of your card. (password, ...) (default "password")
   -v, --vault string           Path to your Enpass vault.
 ```
@@ -109,7 +109,6 @@ $ enpass copy --title Foo
 Enter vault password:
 The password for "Foo" was copied to the clipboard
 ```
-
 
 ## To Do
 * Allow the user to specify fields to display in the tabular view
