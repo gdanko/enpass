@@ -15,7 +15,14 @@ import (
 	_ "github.com/mutecomm/go-sqlcipher"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/thoas/go-funk"
 )
+
+var validFields = []string{
+	"category",
+	"login",
+	"title",
+}
 
 const (
 	// filename of the sqlite vault file
@@ -249,13 +256,13 @@ func (v *Vault) Close() {
 	}
 }
 
-// GetEntries : return the cardType entries in the Enpass database filtered by filters.
-func (v *Vault) GetEntries(cardType string, cardCategory []string, filters []string) ([]Card, error) {
+// GetEntries : return the cardType entries in the Enpass database filtered by option flags.
+func (v *Vault) GetEntries(cardType string, cardCategory []string, cardTitle []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
 	if v.db == nil || v.vaultInfo.VaultName == "" {
 		return nil, errors.New("vault is not initialized")
 	}
 
-	rows, err := v.executeEntryQuery(cardType, cardCategory, filters)
+	rows, err := v.executeEntryQuery(cardType, cardCategory, cardTitle, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
@@ -287,8 +294,8 @@ func (v *Vault) GetEntries(cardType string, cardCategory []string, filters []str
 	return cards, nil
 }
 
-func (v *Vault) GetEntry(cardType string, cardCategory []string, filters []string, unique bool) (*Card, error) {
-	cards, err := v.GetEntries(cardType, cardCategory, filters)
+func (v *Vault) GetEntry(cardType string, cardCategory []string, cardTitle []string, caseSensitive bool, orderbyFlag []string, unique bool) (*Card, error) {
+	cards, err := v.GetEntries(cardType, cardCategory, cardTitle, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards")
 	}
@@ -313,7 +320,7 @@ func (v *Vault) GetEntry(cardType string, cardCategory []string, filters []strin
 	return ret, nil
 }
 
-func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, filters []string) (*sql.Rows, error) {
+func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, cardTitle []string, caseSensitive bool, orderbyFlag []string) (*sql.Rows, error) {
 	query := `
 		SELECT uuid, type, created_at, field_updated_at, title,
 		       subtitle, note, trashed, item.deleted, category,
@@ -325,38 +332,70 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, filter
 	where := []string{"item.deleted = ?"}
 	values := []interface{}{0}
 
+	// We'll probably phase this out
 	if cardType != "" {
 		where = append(where, "type = ?")
 		values = append(values, cardType)
 	}
 
 	if len(cardCategory) > 0 {
-		cardCategoryInterface := make([]interface{}, len(cardCategory))
-		for _, value := range cardCategory {
-			cardCategoryInterface = append(cardCategoryInterface, value)
+		if len(cardCategory) == 1 {
+			categoryItem := cardCategory[0]
+			if strings.HasPrefix(categoryItem, "%") || strings.HasSuffix(categoryItem, "%") {
+				where = append(where, "category LIKE ?")
+			} else {
+				where = append(where, "category = ?")
+			}
+			values = append(values, categoryItem)
+		} else {
+			cardCategoryInterface := make([]interface{}, len(cardCategory))
+			for _, value := range cardCategory {
+				cardCategoryInterface = append(cardCategoryInterface, value)
+			}
+			where = append(where, fmt.Sprintf("category IN (?%s)", strings.Repeat(",?", len(cardCategoryInterface)-1)))
+			values = append(values, cardCategoryInterface...)
 		}
-		where = append(where, fmt.Sprintf("category IN (?%s)", strings.Repeat(",?", len(cardCategoryInterface)-1)))
-		values = append(values, cardCategoryInterface...)
 	}
 
-	filterWhere := []string{}
-	for _, filter := range filters {
-		fq := "(0"
-		for _, field := range v.FilterFields {
-			fq += " + instr(lower(" + field + "), ?)"
-			values = append(values, strings.ToLower(filter))
+	if len(cardTitle) > 0 {
+		if len(cardTitle) == 1 {
+			titleItem := cardTitle[0]
+			if strings.HasPrefix(titleItem, "%") || strings.HasSuffix(titleItem, "%") {
+				where = append(where, "title LIKE ?")
+			} else {
+				where = append(where, "title = ?")
+			}
+			values = append(values, cardTitle[0])
+		} else {
+			cardTitleInterface := make([]interface{}, len(cardTitle))
+			for _, value := range cardTitle {
+				cardTitleInterface = append(cardTitleInterface, value)
+			}
+			where = append(where, fmt.Sprintf("title IN (?%s)", strings.Repeat(",?", len(cardTitleInterface)-1)))
+			values = append(values, cardTitleInterface...)
 		}
-		fq += " > 0)"
-		filterWhere = append(filterWhere, fq)
-	}
-
-	if v.FilterAnd {
-		where = append(where, filterWhere...)
-	} else if len(filterWhere) > 0 {
-		where = append(where, "("+strings.Join(filterWhere, " OR ")+")")
 	}
 
 	query += " WHERE " + strings.Join(where, " AND ")
+	if !caseSensitive {
+		query += " COLLATE NOCASE"
+	}
+
+	if len(orderbyFlag) > 0 {
+		badFields := funk.SubtractString(orderbyFlag, validFields)
+		goodFields := funk.IntersectString(orderbyFlag, validFields)
+		if len(badFields) > 0 {
+			v.logger.Warningf("the following fields cannot be used by --orderby: %s\n", strings.Join(badFields, ", "))
+			if len(goodFields) <= 0 {
+				v.logger.Warningf("after removing invalid --orderby fields, there are no fields remaining")
+			}
+		}
+
+		if len(goodFields) > 0 {
+			query += fmt.Sprintf(" ORDER BY %s", strings.Join(goodFields, ","))
+		}
+	}
+
 	v.logger.Trace("query: ", query)
 	return v.db.Query(query, values...)
 }
