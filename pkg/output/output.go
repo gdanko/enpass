@@ -10,54 +10,18 @@ import (
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/markkurossi/tabulate"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
 )
 
-func GenerateOutput(logger *logrus.Logger, cmdType string, flags *pflag.FlagSet, cards *[]enpass.Card) {
+func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag bool, cards *[]enpass.Card) {
 	var (
-		err         error
-		jsonFlag    bool
-		listFlag    bool
-		tableFlag   bool
-		trashedFlag bool
-		yamlFlag    bool
-		yamlString  string
+		err        error
+		yamlString string
 	)
 
 	if len(*cards) <= 0 {
 		fmt.Println("No cards found matching the specified criteria")
 		os.Exit(0)
-	}
-
-	jsonFlag, err = flags.GetBool("json")
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	listFlag, err = flags.GetBool("list")
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	yamlFlag, err = flags.GetBool("yaml")
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	tableFlag, err = flags.GetBool("table")
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	trashedFlag, err = flags.GetBool("trashed")
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
 	}
 
 	// Loop through all of the cards and exclude trashed items unless we specify --trashed
