@@ -22,8 +22,8 @@ func getListShowFlags(cmd *cobra.Command) {
 func GetPersistenFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&vaultPath, "vault", "v", "", "Path to your Enpass vault.")
 	cmd.PersistentFlags().StringVar(&cardType, "type", "password", "The type of your card. (password, ...)")
-	cmd.PersistentFlags().StringArrayVarP(&cardTitle, "title", "t", []string{}, "Filter based on entry title. Can be used multiple times.")
-	cmd.PersistentFlags().StringArrayVarP(&cardCategory, "category", "c", []string{}, "Filter based on entry category. Can be used multiple times.")
+	cmd.PersistentFlags().StringArrayVarP(&cardTitle, "title", "t", []string{}, "Filter based on entry title. Wildcards (%) are allowed. Can be used multiple times.")
+	cmd.PersistentFlags().StringArrayVarP(&cardCategory, "category", "c", []string{}, "Filter based on entry category. Wildcards (%) are allowed. Can be used multiple times.")
 	cmd.PersistentFlags().StringVarP(&keyFilePath, "keyfile", "k", "", "Path to your Enpass vault keyfile.")
 	cmd.PersistentFlags().StringVarP(&defaultLogLevel, "log", "l", "4", "The log level from debug (5) to panic (1).")
 	cmd.PersistentFlags().BoolVarP(&nonInteractive, "nonInteractive", "n", false, "Disable prompts and fail instead.")
