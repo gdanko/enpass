@@ -11,13 +11,15 @@ I wrote some Python scripts to manipulate my Enpass database, but I wanted to do
 Clone the repository and from within the repository directory, type `make build`. This will create a directory with the given value of `GOOS` and install the binary there. It will also create a tarball which will eventually be used for Homebrew formulae.
 
 ## Features
-* List all items from the database
-* List all items from the database and show the passwords
+* List all entries from the database
+* List all entries from the database and show the passwords
 * Display the password for a given item to STDOUT
 * Copy the password for a given item to the clipboard
-* Output in JSON, YAML, list, or a tabular format
+* Output in JSON, YAML, list, or table format
 * Show trashed items
 * Try to auto-detect the location of the Enpass vault
+* Specify columns to sort by for list and show operations
+* Filter by multiple titles or categories
 * And more....
 
 ## Usage
@@ -29,31 +31,60 @@ Usage:
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
-  copy        Copy the password of a vault entry matching FILTER to the clipboard
+  copy        Copy the password of a vault entry to the clipboard
   help        Help about any command
-  list        List vault entries matching FILTER without password
-  pass        Print the password of a vault entry matching FILTER to stdout
-  show        List vault entries matching FILTER with password
+  list        List vault entries without displaying the password
+  pass        Print the password of a vault entry to STDOUT
+  show        List vault entries, displaying the password
   version     Print the current enpass version
 
 Flags:
-      --and                    Combines filters with AND instead of default OR.
-  -c, --category stringArray   The category of your card. Can be used multiple times.
+  -c, --category stringArray   Filter based on entry category. Can be used multiple times.
   -h, --help                   help for enpass
   -k, --keyfile string         Path to your Enpass vault keyfile.
-      --log string             The log level from debug (5) to panic (1). (default "4")
-      --nonInteractive         Disable prompts and fail instead.
-      --pin                    Enable PIN.
+  -l, --log string             The log level from debug (5) to panic (1). (default "4")
+  -n, --nonInteractive         Disable prompts and fail instead.
+  -p, --pin                    Enable PIN.
+      --sensitive              Force category and title searches to be case-sensitive.
+  -t, --title stringArray      Filter based on entry title. Can be used multiple times.
       --type string            The type of your card. (password, ...) (default "password")
-  -v, --vault string           Path to your Enpass vault
+  -v, --vault string           Path to your Enpass vault.
 
 Use "enpass [command] --help" for more information about a command.
+```
+
+## List Usage
+```
+List vault entries without displaying the password
+
+Usage:
+  enpass list [flags]
+
+Flags:
+  -h, --help                  help for list
+      --json                  Output the data as JSON.
+      --list                  Output the data as list, similar to SQLite line mode.
+  -o, --orderby stringArray   Specify fields to sort by. Can be used multiple times. (default [title])
+      --table                 Output the data as a table.
+      --trashed               Show trashed items.
+      --yaml                  Output the data as YAML.
+
+Global Flags:
+  -c, --category stringArray   Filter based on entry category. Can be used multiple times.
+  -k, --keyfile string         Path to your Enpass vault keyfile.
+  -l, --log string             The log level from debug (5) to panic (1). (default "4")
+  -n, --nonInteractive         Disable prompts and fail instead.
+  -p, --pin                    Enable PIN.
+      --sensitive              Force category and title searches to be case-sensitive.
+  -t, --title stringArray      Filter based on entry title. Can be used multiple times.
+      --type string            The type of your card. (password, ...) (default "password")
+  -v, --vault string           Path to your Enpass vault.
 ```
 
 ## Examples
 List the `Foo` record and output to JSON format
 ```
-$ enpass list Foo --json
+$ enpass list --title Foo --json
 Enter vault password:
 [
     {
@@ -74,25 +105,13 @@ Enter vault password:
 
 Copy the `Foo` record's password to the clipboard
 ```
-$ enpass copy Foo
+$ enpass copy --title Foo
 Enter vault password:
 The password for "Foo" was copied to the clipboard
 ```
 
-List entries containing `user@example.com`
-```
-$ enpass list user@example.com
-Enter vault password:
-title                     login                category
-------------------------- -------------------- --------
-Amazon                    user@example.com     login
-AT&T                      user@example.com     login
-AWS                       user@example.com     login
-Bandcamp                  user@example.com     login
-Best Buy                  user@example.com     login
-```
 
 ## To Do
 * Allow the user to specify fields to display in the tabular view
-* Allow better flexibility with the card types
+* Search based on login (subtitle)
 * Make sure all the other stuff works
