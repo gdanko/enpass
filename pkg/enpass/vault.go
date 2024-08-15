@@ -341,13 +341,8 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, cardTi
 	if len(cardCategory) > 0 {
 		var orSlice []string
 		for _, value := range cardCategory {
-			if strings.HasPrefix(value, "%") || strings.HasSuffix(value, "%") {
-				orSlice = append(orSlice, "category LIKE ?")
-				values = append(values, value)
-			} else {
-				orSlice = append(orSlice, "category = ?")
-				values = append(values, value)
-			}
+			orSlice = append(orSlice, "category LIKE ?")
+			values = append(values, value)
 		}
 		where = append(where, fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")))
 	}
@@ -355,13 +350,8 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, cardTi
 	if len(cardTitle) > 0 {
 		var orSlice []string
 		for _, value := range cardTitle {
-			if strings.HasPrefix(value, "%") || strings.HasSuffix(value, "%") {
-				orSlice = append(orSlice, "title LIKE ?")
-				values = append(values, value)
-			} else {
-				orSlice = append(orSlice, "title = ?")
-				values = append(values, value)
-			}
+			orSlice = append(orSlice, "title LIKE ?")
+			values = append(values, value)
 		}
 		where = append(where, fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")))
 	}
@@ -387,5 +377,7 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, cardTi
 	}
 
 	v.logger.Trace("query: ", query)
+	fmt.Println(query)
+	fmt.Println(values)
 	return v.db.Query(query, values...)
 }
