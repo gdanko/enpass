@@ -8,6 +8,7 @@ import (
 
 var (
 	cardCategory     []string
+	cardLogin        []string
 	cardTitle        []string
 	cardType         string
 	caseSensitive    bool

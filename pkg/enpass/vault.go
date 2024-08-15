@@ -257,12 +257,12 @@ func (v *Vault) Close() {
 }
 
 // GetEntries : return the cardType entries in the Enpass database filtered by option flags.
-func (v *Vault) GetEntries(cardType string, cardCategory []string, cardTitle []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
+func (v *Vault) GetEntries(cardType string, cardCategory, cardTitle, cardLogin []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
 	if v.db == nil || v.vaultInfo.VaultName == "" {
 		return nil, errors.New("vault is not initialized")
 	}
 
-	rows, err := v.executeEntryQuery(cardType, cardCategory, cardTitle, caseSensitive, orderbyFlag)
+	rows, err := v.executeEntryQuery(cardType, cardCategory, cardTitle, cardLogin, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
@@ -294,8 +294,8 @@ func (v *Vault) GetEntries(cardType string, cardCategory []string, cardTitle []s
 	return cards, nil
 }
 
-func (v *Vault) GetEntry(cardType string, cardCategory []string, cardTitle []string, caseSensitive bool, orderbyFlag []string, unique bool) (*Card, error) {
-	cards, err := v.GetEntries(cardType, cardCategory, cardTitle, caseSensitive, orderbyFlag)
+func (v *Vault) GetEntry(cardType string, cardCategory, cardTitle, cardLogin []string, caseSensitive bool, orderbyFlag []string, unique bool) (*Card, error) {
+	cards, err := v.GetEntries(cardType, cardCategory, cardTitle, cardLogin, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards")
 	}
@@ -320,7 +320,7 @@ func (v *Vault) GetEntry(cardType string, cardCategory []string, cardTitle []str
 	return ret, nil
 }
 
-func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, cardTitle []string, caseSensitive bool, orderbyFlag []string) (*sql.Rows, error) {
+func (v *Vault) executeEntryQuery(cardType string, cardCategory, cardTitle, cardLogin []string, caseSensitive bool, orderbyFlag []string) (*sql.Rows, error) {
 	query := `
 		SELECT uuid, type, created_at, field_updated_at, title,
 		       subtitle, note, trashed, item.deleted, category,
@@ -351,6 +351,15 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, cardTi
 		var orSlice []string
 		for _, value := range cardTitle {
 			orSlice = append(orSlice, "title LIKE ?")
+			values = append(values, value)
+		}
+		where = append(where, fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")))
+	}
+
+	if len(cardLogin) > 0 {
+		var orSlice []string
+		for _, value := range cardLogin {
+			orSlice = append(orSlice, "subtitle LIKE ?")
 			values = append(values, value)
 		}
 		where = append(where, fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")))

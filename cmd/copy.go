@@ -65,7 +65,7 @@ func copyRunCmd(cmd *cobra.Command, args []string) error {
 	}
 	logger.Debug("opened vault")
 
-	card, err := vault.GetEntry(cardType, cardCategory, cardTitle, caseSensitive, orderbyFlag, true)
+	card, err := vault.GetEntry(cardType, cardCategory, cardTitle, cardLogin, caseSensitive, orderbyFlag, true)
 	if err != nil {
 		return err
 	}
