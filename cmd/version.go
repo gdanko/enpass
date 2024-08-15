@@ -19,12 +19,12 @@ var (
 
 func init() {
 	// This is only here to override the required vault flag for other commands
-	versionCmd.Flags().StringVarP(&vaultPath, "vault", "v", "", "Path to your Enpass vault")
+	versionCmd.Flags().BoolVarP(&versionFull, "full", "f", false, "Display more version information")
 	rootCmd.AddCommand(versionCmd)
 }
 
 func runVersionCmd(cmd *cobra.Command, args []string) error {
-	fmt.Fprintf(cmd.OutOrStdout(), "%s\n", enpass.Version(true, true))
+	fmt.Fprintf(cmd.OutOrStdout(), "%s\n", enpass.Version(true, true, versionFull))
 
 	return nil
 }

@@ -34,12 +34,13 @@ var (
 		Short: "enpass is a command line interface for the Enpass password manager",
 		Long:  "enpass is a command line interface for the Enpass password manager",
 	}
-	sort      bool
-	tableFlag bool
-	trashed   bool
-	vault     *enpass.Vault
-	vaultPath = "/home/gdanko/Documents/Enpass/Vaults/primary"
-	yamlFlag  bool
+	sort        bool
+	tableFlag   bool
+	trashed     bool
+	vault       *enpass.Vault
+	vaultPath   string
+	versionFull bool
+	yamlFlag    bool
 )
 
 func Execute() error {
