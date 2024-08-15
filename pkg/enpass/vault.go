@@ -377,7 +377,5 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory []string, cardTi
 	}
 
 	v.logger.Trace("query: ", query)
-	fmt.Println(query)
-	fmt.Println(values)
 	return v.db.Query(query, values...)
 }
