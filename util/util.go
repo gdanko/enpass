@@ -3,9 +3,7 @@ package util
 import (
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/gdanko/enpass/pkg/unlock"
@@ -96,15 +94,4 @@ func OpenVault(logger *logrus.Logger, pinEnable bool, nonInteractive bool, vault
 	credentials = AssembleVaultCredentials(logger, vaultPath, keyFilePath, nonInteractive, store)
 
 	return vault, credentials, nil
-}
-
-func SortEntries(cards []enpass.Card) {
-	// Sort by username preserving original order
-	sort.SliceStable(cards, func(i, j int) bool {
-		return strings.ToLower(cards[i].Subtitle) < strings.ToLower(cards[j].Subtitle)
-	})
-	// Sort by title, preserving username order
-	sort.SliceStable(cards, func(i, j int) bool {
-		return strings.ToLower(cards[i].Title) < strings.ToLower(cards[j].Title)
-	})
 }
