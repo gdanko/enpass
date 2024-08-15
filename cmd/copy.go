@@ -24,7 +24,7 @@ var (
 
 func init() {
 	// copyCmd.Flags().BoolVar(&trashed, "trashed", false, "Show trashed items")
-	copyCmd.Flags().BoolVar(&clipboardPrimary, "clipboardPrimary", false, "Use primary X selection instead of clipboard")
+	copyCmd.Flags().BoolVar(&clipboardPrimary, "clipboardPrimary", false, "Use primary X selection instead of clipboard.")
 	rootCmd.AddCommand(copyCmd)
 }
 

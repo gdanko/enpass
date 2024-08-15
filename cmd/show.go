@@ -20,8 +20,8 @@ var (
 )
 
 func init() {
-	showCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Sort the output by title and username")
-	showCmd.Flags().BoolVar(&trashed, "trashed", false, "Show trashed items")
+	showCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Sort the output by title and username.")
+	showCmd.Flags().BoolVar(&trashed, "trashed", false, "Show trashed items.")
 	showCmd.Flags().BoolVarP(&jsonFlag, "json", "j", false, "Output the data as JSON.")
 	showCmd.Flags().BoolVarP(&listFlag, "list", "l", false, "Output the data as list, similar to SQLite line mode.")
 	showCmd.Flags().BoolVarP(&yamlFlag, "yaml", "y", false, "Output the data as YAML.")
