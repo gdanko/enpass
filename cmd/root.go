@@ -14,19 +14,21 @@ var (
 	caseSensitive    bool
 	clipboardPrimary bool
 	credentials      *enpass.VaultCredentials
-	defaultLogLevel  string
+	defaultLogLevel  = "info"
 	err              error
 	keyFilePath      string
 	jsonFlag         bool
 	listFlag         bool
 	logLevel         logrus.Level
-	logLevelStr      = "4"
-	logLevelMap      = map[string]string{
-		"5": "debug",
-		"4": "info",
-		"3": "warn",
-		"2": "error",
-		"1": "panic",
+	logLevelStr      string
+	logLevelMap      = map[string]logrus.Level{
+		"panic": logrus.PanicLevel,
+		"fatal": logrus.FatalLevel,
+		"error": logrus.ErrorLevel,
+		"warn":  logrus.WarnLevel,
+		"info":  logrus.InfoLevel,
+		"debug": logrus.DebugLevel,
+		"trace": logrus.TraceLevel,
 	}
 	nonInteractive bool
 	orderbyFlag    []string

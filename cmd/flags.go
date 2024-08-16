@@ -1,6 +1,11 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	"github.com/gdanko/enpass/util"
+	"github.com/spf13/cobra"
+)
 
 func GetListFlags(cmd *cobra.Command) {
 	getListShowFlags(cmd)
@@ -26,7 +31,7 @@ func GetPersistenFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringArrayVarP(&cardCategory, "category", "c", []string{}, "Filter based on record category. Wildcards (%) are allowed. Can be used multiple times.")
 	cmd.PersistentFlags().StringArrayVarP(&cardLogin, "login", "l", []string{}, "Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.")
 	cmd.PersistentFlags().StringVarP(&keyFilePath, "keyfile", "k", "", "Path to your Enpass vault keyfile.")
-	cmd.PersistentFlags().StringVar(&defaultLogLevel, "log", "4", "The log level from debug (5) to panic (1).")
+	cmd.PersistentFlags().StringVar(&logLevelStr, "log", defaultLogLevel, fmt.Sprintf("The log level, one of: %s", util.ReturnLogLevels(logLevelMap)))
 	cmd.PersistentFlags().BoolVarP(&nonInteractive, "nonInteractive", "n", false, "Disable prompts and fail instead.")
 	cmd.PersistentFlags().BoolVar(&caseSensitive, "sensitive", false, "Force category and title searches to be case-sensitive.")
 	cmd.PersistentFlags().BoolVarP(&pinEnable, "pin", "p", false, "Enable PIN.")

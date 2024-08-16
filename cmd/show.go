@@ -26,12 +26,8 @@ func init() {
 
 func showPreRunCmd(cmd *cobra.Command, args []string) error {
 	logger = logrus.New()
-	logLevel, err = logrus.ParseLevel(logLevelMap[logLevelStr])
-	if err != nil {
-		logrus.WithError(err).Fatal("invalid log level specified")
-	}
+	logLevel = logLevelMap[logLevelStr]
 	logger.SetLevel(logLevel)
-
 	return nil
 }
 
