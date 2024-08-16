@@ -66,6 +66,24 @@ func (credentials *VaultCredentials) IsComplete() bool {
 	return credentials.Password != "" || credentials.DBKey != nil
 }
 
+func processSqlIn(items []string, caseSensitive bool, columnName string) (whereItem string, outputValues []string) {
+	var orSlice []string
+	for _, value := range items {
+		if caseSensitive {
+			if strings.Contains(value, "%") {
+				value = strings.Replace(value, "%", "*", -1)
+				orSlice = append(orSlice, fmt.Sprintf("%s GLOB ?", columnName))
+			} else {
+				orSlice = append(orSlice, fmt.Sprintf("%s GLOB ?", columnName))
+			}
+		} else {
+			orSlice = append(orSlice, fmt.Sprintf("%s LIKE ?", columnName))
+		}
+		outputValues = append(outputValues, value)
+	}
+	return fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")), outputValues
+}
+
 // FileOrDirectoryExists : Determine if a file or directory exists
 func FileOrDirectoryExists(path string) (exists bool, err error) {
 	_, err = os.Stat(path)
@@ -339,33 +357,31 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory, cardTitle, card
 	}
 
 	if len(cardCategory) > 0 {
-		var orSlice []string
-		for _, value := range cardCategory {
-			orSlice = append(orSlice, "category LIKE ?")
-			values = append(values, value)
+		whereItem, outputValues := processSqlIn(cardCategory, caseSensitive, "category")
+		where = append(where, whereItem)
+		for _, outputValue := range outputValues {
+			values = append(values, outputValue)
 		}
-		where = append(where, fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")))
 	}
 
 	if len(cardTitle) > 0 {
-		var orSlice []string
-		for _, value := range cardTitle {
-			orSlice = append(orSlice, "title LIKE ?")
-			values = append(values, value)
+		whereItem, outputValues := processSqlIn(cardTitle, caseSensitive, "title")
+		where = append(where, whereItem)
+		for _, outputValue := range outputValues {
+			values = append(values, outputValue)
 		}
-		where = append(where, fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")))
 	}
 
 	if len(cardLogin) > 0 {
-		var orSlice []string
-		for _, value := range cardLogin {
-			orSlice = append(orSlice, "subtitle LIKE ?")
-			values = append(values, value)
+		whereItem, outputValues := processSqlIn(cardLogin, caseSensitive, "subtitle")
+		where = append(where, whereItem)
+		for _, outputValue := range outputValues {
+			values = append(values, outputValue)
 		}
-		where = append(where, fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")))
 	}
 
 	query += " WHERE " + strings.Join(where, " AND ")
+
 	if !caseSensitive {
 		query += " COLLATE NOCASE"
 	}
@@ -386,5 +402,6 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory, cardTitle, card
 	}
 
 	v.logger.Trace("query: ", query)
+	v.logger.Trace("values: ", values)
 	return v.db.Query(query, values...)
 }
