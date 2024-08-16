@@ -12,23 +12,32 @@ import (
 
 	// sqlcipher is necessary for sqlite crypto support
 
-	_ "github.com/mutecomm/go-sqlcipher"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/thoas/go-funk"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 )
-
-var validFields = []string{
-	"category",
-	"login",
-	"title",
-}
 
 const (
 	// filename of the sqlite vault file
 	vaultFileName = "vault.enpassdb"
 	// contains info about your vault
 	vaultInfoFileName = "vault.json"
+)
+
+var (
+	gormConfig = &gorm.Config{
+		PrepareStmt:            true,
+		QueryFields:            true,
+		SkipDefaultTransaction: true,
+		Logger:                 gormLogger.Default.LogMode(gormLogger.Info),
+	}
+	validFields = []string{
+		"category",
+		"login",
+		"title",
+	}
 )
 
 // Vault : vault is the container object for vault-related operations
@@ -50,7 +59,7 @@ type Vault struct {
 	//attachments []string
 
 	// pointer to our opened database
-	db *sql.DB
+	db *gorm.DB
 
 	// vault.json : contains info about your vault for synchronizing
 	vaultInfo VaultInfo
@@ -66,23 +75,23 @@ func (credentials *VaultCredentials) IsComplete() bool {
 	return credentials.Password != "" || credentials.DBKey != nil
 }
 
-func processSqlIn(items []string, caseSensitive bool, columnName string) (whereItem string, outputValues []string) {
-	var orSlice []string
-	for _, value := range items {
-		if caseSensitive {
-			if strings.Contains(value, "%") {
-				value = strings.Replace(value, "%", "*", -1)
-				orSlice = append(orSlice, fmt.Sprintf("%s GLOB ?", columnName))
-			} else {
-				orSlice = append(orSlice, fmt.Sprintf("%s GLOB ?", columnName))
-			}
-		} else {
-			orSlice = append(orSlice, fmt.Sprintf("%s LIKE ?", columnName))
-		}
-		outputValues = append(outputValues, value)
-	}
-	return fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")), outputValues
-}
+// func processSqlIn(items []string, caseSensitive bool, columnName string) (whereItem string, outputValues []string) {
+// 	var orSlice []string
+// 	for _, value := range items {
+// 		if caseSensitive {
+// 			if strings.Contains(value, "%") {
+// 				value = strings.Replace(value, "%", "*", -1)
+// 				orSlice = append(orSlice, fmt.Sprintf("%s GLOB ?", columnName))
+// 			} else {
+// 				orSlice = append(orSlice, fmt.Sprintf("%s GLOB ?", columnName))
+// 			}
+// 		} else {
+// 			orSlice = append(orSlice, fmt.Sprintf("%s LIKE ?", columnName))
+// 		}
+// 		outputValues = append(outputValues, value)
+// 	}
+// 	return fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")), outputValues
+// }
 
 // FileOrDirectoryExists : Determine if a file or directory exists
 func FileOrDirectoryExists(path string) (exists bool, err error) {
@@ -182,10 +191,24 @@ func (v *Vault) openEncryptedDatabase(path string, dbKey []byte) (err error) {
 		hex.EncodeToString(dbKey)[:masterKeyLength],
 	)
 
-	v.db, err = sql.Open("sqlite3", dbName)
-	if err != nil {
-		return errors.Wrap(err, "could not open database")
-	}
+	fmt.Println(111)
+
+	// dbnameWithDSN := dbName + fmt.Sprintf("?_pragma_key=x%s&_pragma_cipher_compatibility=3", string(dbKey))
+	// fmt.Println(dbnameWithDSN)
+	fmt.Println(dbName)
+	fmt.Println(222)
+
+	v.db, _ = gorm.Open(sqlite.Open(dbName), &gorm.Config{})
+	// if err != nil {
+	// 	return errors.Wrap(err, "could not open database")
+	// }
+	// fmt.Println(333)
+
+	// defer func() {
+	// 	dbInstance, _ := v.db.DB()
+	// 	_ = dbInstance.Close()
+	// }()
+	os.Exit(0)
 
 	return nil
 }
@@ -251,27 +274,43 @@ func (v *Vault) Open(credentials *VaultCredentials) error {
 		return errors.Wrap(err, "could not open encrypted database")
 	}
 
-	var tableName string
-	err := v.db.QueryRow(`
-		SELECT name
-		FROM sqlite_master
-		WHERE type='table' AND name='item'
-	`).Scan(&tableName)
-	if err != nil {
-		return errors.Wrap(err, "could not connect to database")
-	} else if tableName != "item" {
-		return errors.New("could not connect to database")
+	type Result struct {
+		Name string `db:"name"`
 	}
+
+	var (
+		result  Result
+		results []Result
+	)
+
+	v.db.Select("name").Table("sqlite_master").Where("type = ?", "table").Where("name = ?", "item").Find(&results)
+	for _, result = range results {
+		if result.Name == "item" {
+			return errors.New("could not connect to database")
+		}
+	}
+
+	// var tableName string
+	// err := v.db.QueryRow(`
+	// 	SELECT name
+	// 	FROM sqlite_master
+	// 	WHERE type='table' AND name='item'
+	// `).Scan(&tableName)
+	// if err != nil {
+	// 	return errors.Wrap(err, "could not connect to database")
+	// } else if tableName != "item" {
+	// 	return errors.New("could not connect to database")
+	// }
 
 	return nil
 }
 
 // Close : close the connection to the underlying database. Always call this in the end.
 func (v *Vault) Close() {
-	if v.db != nil {
-		err := v.db.Close()
-		v.logger.WithError(err).Debug("closed vault")
-	}
+	// if v.db != nil {
+	// 	err := v.db.Close()
+	// 	v.logger.WithError(err).Debug("closed vault")
+	// }
 }
 
 // GetEntries : return the cardType entries in the Enpass database filtered by option flags.
@@ -339,69 +378,59 @@ func (v *Vault) GetEntry(cardType string, cardCategory, cardTitle, cardLogin []s
 }
 
 func (v *Vault) executeEntryQuery(cardType string, cardCategory, cardTitle, cardLogin []string, caseSensitive bool, orderbyFlag []string) (*sql.Rows, error) {
-	query := `
-		SELECT uuid, type, created_at, field_updated_at, title,
-		       subtitle, note, trashed, item.deleted, category,
-		       label, value, key, last_used, sensitive, item.icon
-		FROM item
-		INNER JOIN itemfield ON uuid = item_uuid
-	`
 
-	where := []string{"item.deleted = ?"}
-	values := []interface{}{0}
+	// if len(cardCategory) > 0 {
+	// 	var orSlice []string
+	// 	for _, value := range cardCategory {
+	// 		if caseSensitive {
+	// 			if strings.Contains(value, "%") {
+	// 				value = strings.Replace(value, "%", "*", -1)
+	// 				orSlice = append(orSlice, fmt.Sprintf("%s GLOB ?", columnName))
+	// 		}
+	// }
 
-	// We'll probably phase this out
-	if cardType != "" {
-		where = append(where, "type = ?")
-		values = append(values, cardType)
-	}
+	query := v.db.Select("uuid", "type", "created_at", "field_updated_at", "title", "subtitle", "note", "trashed", "item.deleted", "category", "label", "value", "key", "last_used", "sensitive", "item.icon").Table("item").Joins("INNER JOIN itemfield ON uuid = item_uuid")
+
+	query = query.Where("deleted = ?", 0)
+	query = query.Where("type = ?", "password")
 
 	if len(cardCategory) > 0 {
-		whereItem, outputValues := processSqlIn(cardCategory, caseSensitive, "category")
-		where = append(where, whereItem)
-		for _, outputValue := range outputValues {
-			values = append(values, outputValue)
+		for _, categoryName := range cardCategory {
+			if caseSensitive {
+				categoryName = strings.Replace(categoryName, "%", "*", -1)
+				query = query.Or("category GLOB ?", categoryName)
+			} else {
+				query = query.Or("category LIKE ?", categoryName)
+			}
 		}
 	}
 
 	if len(cardTitle) > 0 {
-		whereItem, outputValues := processSqlIn(cardTitle, caseSensitive, "title")
-		where = append(where, whereItem)
-		for _, outputValue := range outputValues {
-			values = append(values, outputValue)
+		for _, titleName := range cardTitle {
+			if caseSensitive {
+				titleName = strings.Replace(titleName, "%", "*", -1)
+				query = query.Or("title GLOB ?", titleName)
+			} else {
+				query = query.Or("title LIKE ?", titleName)
+			}
 		}
 	}
 
 	if len(cardLogin) > 0 {
-		whereItem, outputValues := processSqlIn(cardLogin, caseSensitive, "subtitle")
-		where = append(where, whereItem)
-		for _, outputValue := range outputValues {
-			values = append(values, outputValue)
-		}
-	}
-
-	query += " WHERE " + strings.Join(where, " AND ")
-
-	if !caseSensitive {
-		query += " COLLATE NOCASE"
-	}
-
-	if len(orderbyFlag) > 0 {
-		badFields := funk.SubtractString(orderbyFlag, validFields)
-		goodFields := funk.IntersectString(orderbyFlag, validFields)
-		if len(badFields) > 0 {
-			v.logger.Warningf("the following fields cannot be used by --orderby: %s\n", strings.Join(badFields, ", "))
-			if len(goodFields) <= 0 {
-				v.logger.Warningf("after removing invalid --orderby fields, there are no fields remaining")
+		for _, loginName := range cardLogin {
+			if caseSensitive {
+				loginName = strings.Replace(loginName, "%", "*", -1)
+				query = query.Or("subtitle GLOB ?", loginName)
+			} else {
+				query = query.Or("subtitle LIKE ?", loginName)
 			}
 		}
-
-		if len(goodFields) > 0 {
-			query += fmt.Sprintf(" ORDER BY %s", strings.Join(goodFields, ","))
-		}
 	}
 
-	v.logger.Trace("query: ", query)
-	v.logger.Trace("values: ", values)
-	return v.db.Query(query, values...)
+	if 1 == 2 {
+		fmt.Println(cardType)
+		fmt.Println(query)
+	}
+
+	return nil, nil
 }
