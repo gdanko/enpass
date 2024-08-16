@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/gdanko/enpass/pkg/unlock"
@@ -94,4 +95,12 @@ func OpenVault(logger *logrus.Logger, pinEnable bool, nonInteractive bool, vault
 	credentials = AssembleVaultCredentials(logger, vaultPath, keyFilePath, nonInteractive, store)
 
 	return vault, credentials, nil
+}
+
+func ReturnLogLevels(levelMap map[string]logrus.Level) string {
+	var logLevels []string
+	for k := range levelMap {
+		logLevels = append(logLevels, k)
+	}
+	return strings.Join(logLevels, ", ")
 }
