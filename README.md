@@ -19,7 +19,7 @@ Clone the repository and from within the repository directory, type `make build`
 * Show trashed items
 * Try to auto-detect the location of the Enpass vault
 * Specify columns to sort by for list and show operations
-* Filter by multiple titles or categories
+* Filter by multiple logins (subtitles), titles, or categories using wildcards
 * And more....
 
 ## Usage
@@ -39,14 +39,15 @@ Available Commands:
   version     Print the current enpass version
 
 Flags:
-  -c, --category stringArray   Filter based on entry category. Wildcards (%) are allowed. Can be used multiple times.
+  -c, --category stringArray   Filter based on record category. Wildcards (%) are allowed. Can be used multiple times.
   -h, --help                   help for enpass
   -k, --keyfile string         Path to your Enpass vault keyfile.
-  -l, --log string             The log level from debug (5) to panic (1). (default "4")
+      --log string             The log level, one of: fatal, error, warn, info, debug, trace, panic (default "info")
+  -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
   -n, --nonInteractive         Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
-  -t, --title stringArray      Filter based on entry title. Wildcards (%) are allowed. Can be used multiple times.
+  -t, --title stringArray      Filter based on record title. Wildcards (%) are allowed. Can be used multiple times.
       --type string            The type of your card. (password, ...) (default "password")
   -v, --vault string           Path to your Enpass vault.
 
@@ -70,21 +71,22 @@ Flags:
       --yaml                  Output the data as YAML.
 
 Global Flags:
-  -c, --category stringArray   Filter based on entry category. Wildcards (%) are allowed. Can be used multiple times.
+  -c, --category stringArray   Filter based on record category. Wildcards (%) are allowed. Can be used multiple times.
   -k, --keyfile string         Path to your Enpass vault keyfile.
-  -l, --log string             The log level from debug (5) to panic (1). (default "4")
+      --log string             The log level, one of: trace, panic, fatal, error, warn, info, debug (default "info")
+  -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
   -n, --nonInteractive         Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
-  -t, --title stringArray      Filter based on entry title. Wildcards (%) are allowed. Can be used multiple times.
+  -t, --title stringArray      Filter based on record title. Wildcards (%) are allowed. Can be used multiple times.
       --type string            The type of your card. (password, ...) (default "password")
   -v, --vault string           Path to your Enpass vault.
 ```
 
 ## Examples
-List the `Foo` record and output to JSON format
+List the `Discord` record and output to JSON format
 ```
-$ enpass list --title Foo --json
+$ enpass list --title Discord --json
 Enter vault password:
 [
     {
@@ -92,12 +94,12 @@ Enter vault password:
         "created": 1722787097,
         "card_type": "password",
         "updated": 1722787097,
-        "title": "Foo",
+        "title": "Discord",
         "subtitle": "user@example.com",
         "category": "login",
         "label": "Password",
         "sensitive": true,
-        "icon": "{\"fav\":\"foo.com\",\"image\":{\"file\":\"misc/login\"},\"type\":1,\"uuid\":\"\"}",
+        "icon": "{\"fav\":\"discord.com\",\"image\":{\"file\":\"misc/login\"},\"type\":1,\"uuid\":\"\"}",
         "raw_value": "xxxxxxx"
     }
 ]
@@ -110,7 +112,32 @@ Enter vault password:
 The password for "Foo" was copied to the clipboard
 ```
 
+List all records with the login user@example.com and output in to table format
+```
+enpass list --login user@example.com --table
+Enter vault password:
+title                 login                 category
+--------------------- --------------------- --------
+Discord               user@example.com      login
+Playstation           user@example.com      login
+Xbox                  user@example.com      login
+Twitch                user@example.com      login
+```
+
+List all records containing GitHub, forcing case-sensitivity, and output to a table format
+```
+enpass list --title %GitHub% --sensitive --table
+Enter vault password:
+title                       login                        category
+--------------------------- ---------------------------- --------
+GitHub                      gdanko@example.com           login
+GitHub                      https://github.com           computer
+Work GitHub (gdanko-work)   https://github.workplace.com computer
+```
+
 ## To Do
-* Allow the user to specify fields to display in the tabular view
+* Allow the user to specify fields to display in the table and list views
 * Search based on login (subtitle)
+* Allow the user to store their password as an environment variable
 * Make sure all the other stuff works
+
