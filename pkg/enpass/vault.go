@@ -10,11 +10,9 @@ import (
 	"runtime"
 	"strings"
 
-	// sqlcipher is necessary for sqlite crypto support
-
+	sqlcipher "github.com/anycell/sqlcipher-gorm"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
 )
@@ -198,7 +196,7 @@ func (v *Vault) openEncryptedDatabase(path string, dbKey []byte) (err error) {
 	fmt.Println(dbName)
 	fmt.Println(222)
 
-	v.db, _ = gorm.Open(sqlite.Open(dbName), &gorm.Config{})
+	v.db, _ = gorm.Open(sqlcipher.Open(dbName), &gorm.Config{})
 	// if err != nil {
 	// 	return errors.Wrap(err, "could not open database")
 	// }
