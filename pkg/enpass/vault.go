@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	sqlcipher "github.com/anycell/sqlcipher-gorm"
+	sqliteEncrypt "github.com/BoredTape/gorm-sqlcipher"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -23,6 +23,12 @@ const (
 	// contains info about your vault
 	vaultInfoFileName = "vault.json"
 )
+
+type Product struct {
+	gorm.Model
+	Code  string
+	Price uint
+}
 
 var (
 	gormConfig = &gorm.Config{
@@ -181,32 +187,52 @@ func NewVault(vaultPath string, logLevel logrus.Level) (*Vault, error) {
 }
 
 func (v *Vault) openEncryptedDatabase(path string, dbKey []byte) (err error) {
-	// The raw key for the sqlcipher database is given
-	// by the first 64 characters of the hex-encoded key
-	dbName := fmt.Sprintf(
-		"%s?_pragma_key=x'%s'&_pragma_cipher_compatibility=3",
-		path,
-		hex.EncodeToString(dbKey)[:masterKeyLength],
-	)
+	key := hex.EncodeToString(dbKey)[:masterKeyLength]
+	var dbName string
+	// dbName = fmt.Sprintf("%s?_pragma_key=x'%s'", path, key)
+	// dbName = fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_compatibility=3", path, key)
+	// dbName = fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_page_size=4096", path, key)
+	dbName = fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_compatibility=3&_pragma_cipher_page_size=4096", path, key)
 
+	db, err := gorm.Open(sqliteEncrypt.Open(dbName), &gorm.Config{})
 	fmt.Println(111)
-
-	// dbnameWithDSN := dbName + fmt.Sprintf("?_pragma_key=x%s&_pragma_cipher_compatibility=3", string(dbKey))
-	// fmt.Println(dbnameWithDSN)
+	fmt.Println(path)
+	fmt.Println(key)
 	fmt.Println(dbName)
+	fmt.Println()
+	fmt.Println(db)
+	fmt.Println(err)
 	fmt.Println(222)
 
-	v.db, _ = gorm.Open(sqlcipher.Open(dbName), &gorm.Config{})
+	// os.Exit(0)
+
+	if err != nil {
+		fmt.Println("oh no!")
+		panic(err)
+	}
+	fmt.Println(db)
+	// The raw key for the sqlcipher database is given
+	// by the first 64 characters of the hex-encoded key
+	// hexKey := hex.EncodeToString(dbKey)[:masterKeyLength]
+	// dbName := fmt.Sprintf(
+	// 	"%s?_pragma_key=x'%s'&_pragma_cipher_compatibility=3",
+	// 	path,
+	// 	hexKey,
+	// )
+	// fmt.Println(111)
+	// fmt.Println(path)
+	// fmt.Println(hexKey)
+	// fmt.Println(dbName)
+	// fmt.Println(222)
+	// v.db, err = gorm.Open(sqlcipher.Open(dbName), gormConfig)
 	// if err != nil {
 	// 	return errors.Wrap(err, "could not open database")
 	// }
-	// fmt.Println(333)
 
 	// defer func() {
 	// 	dbInstance, _ := v.db.DB()
 	// 	_ = dbInstance.Close()
 	// }()
-	os.Exit(0)
 
 	return nil
 }
@@ -271,22 +297,27 @@ func (v *Vault) Open(credentials *VaultCredentials) error {
 	if err := v.openEncryptedDatabase(v.databaseFilename, credentials.DBKey); err != nil {
 		return errors.Wrap(err, "could not open encrypted database")
 	}
+	fmt.Println("yay!!!")
 
 	type Result struct {
 		Name string `db:"name"`
 	}
 
 	var (
-		result  Result
-		results []Result
+	// result  Result
+	// results []Result
 	)
+	// v.db.Select("name").Table("sqlite_master")
 
-	v.db.Select("name").Table("sqlite_master").Where("type = ?", "table").Where("name = ?", "item").Find(&results)
-	for _, result = range results {
-		if result.Name == "item" {
-			return errors.New("could not connect to database")
-		}
-	}
+	// v.db.Select("name").Table("sqlite_master").Where("type = ?", "table").Where("name = ?", "item").Find(&results)
+	// for _, result = range results {
+	// 	if result.Name == "item" {
+	// 		return errors.New("could not connect to database")
+	// 	}
+	// }
+	v.db.Select("*").Table("item")
+	fmt.Println("yay!!!!!!")
+	os.Exit(0)
 
 	// var tableName string
 	// err := v.db.QueryRow(`
