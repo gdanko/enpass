@@ -367,36 +367,37 @@ func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, 
 	query.Where("item.deleted = ?", 0)
 	query.Where("type = ?", cardType)
 
+	query.Where(v.db.Where("title LIKE ?", "%GitH%").Or("title LIKE ?", "Amazon"))
+	query.Where(v.db.Where("category LIKE ?", "computer"))
+
 	if len(recordCategory) > 0 {
-		categoryClone := v.db
+		// categoryClone := v.db
 		for _, categoryName := range recordCategory {
 			var keyword = "LIKE"
 			if caseSensitive {
 				keyword = "GLOB"
 				categoryName = strings.Replace(categoryName, "%", "*", -1)
 			}
-			categoryClone = categoryClone.Or(
+			v.db = v.db.Or(
 				fmt.Sprintf("category %s ?", keyword),
 				categoryName,
 			)
 		}
-		query.Where(categoryClone)
 	}
 
 	if len(recordTitle) > 0 {
-		titleClone := v.db
+		// titleClone := v.db
 		for _, titleName := range recordTitle {
 			var keyword = "LIKE"
 			if caseSensitive {
 				keyword = "GLOB"
 				titleName = strings.Replace(titleName, "%", "*", -1)
 			}
-			titleClone = titleClone.Or(
+			v.db = v.db.Or(
 				fmt.Sprintf("title %s ?", keyword),
 				titleName,
 			)
 		}
-		query.Where(titleClone)
 	}
 
 	if len(recordLogin) > 0 {
