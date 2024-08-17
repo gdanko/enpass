@@ -43,6 +43,10 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, t
 		}
 	}
 
+	for i := range cardsPruned {
+		(cardsPruned)[i].Key = []byte{}
+	}
+
 	cards = &cardsPruned
 
 	if jsonFlag {
