@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	// sqlcipher is necessary for sqlite crypto support
-
 	sqlcipher "github.com/gdanko/gorm-sqlcipher"
 	"github.com/kr/pretty"
 	"github.com/pkg/errors"
@@ -19,18 +18,21 @@ import (
 	gormLogger "gorm.io/gorm/logger"
 )
 
-var gormConfig = &gorm.Config{
-	PrepareStmt:            true,
-	QueryFields:            true,
-	SkipDefaultTransaction: true,
-	Logger:                 gormLogger.Default.LogMode(gormLogger.Info),
-}
-
-var validFields = []string{
-	"category",
-	"login",
-	"title",
-}
+var (
+	gormConfig = &gorm.Config{
+		PrepareStmt:            true,
+		QueryFields:            true,
+		SkipDefaultTransaction: true,
+		Logger:                 gormLogger.Default.LogMode(gormLogger.Info),
+	}
+	rows      []Card
+	tableName = "item"
+	// validFields = []string{
+	// 	"category",
+	// 	"login",
+	// 	"title",
+	// }
+)
 
 const (
 	// filename of the sqlite vault file
@@ -38,6 +40,14 @@ const (
 	// contains info about your vault
 	vaultInfoFileName = "vault.json"
 )
+
+type Tabler interface {
+	TableName() string
+}
+
+func (Card) TableName() string {
+	return tableName
+}
 
 // Vault : vault is the container object for vault-related operations
 type Vault struct {
@@ -256,7 +266,6 @@ func (v *Vault) Open(credentials *VaultCredentials) error {
 			return errors.New("could not connect to database")
 		}
 	}
-	fmt.Println(444)
 	return nil
 }
 
@@ -278,9 +287,18 @@ func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordL
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
-	fmt.Println(len(rows))
 
 	var cards []Card
+
+	pretty.Print(rows)
+	os.Exit(0)
+
+	// pretty.Println(rows[0])
+	// icon := rows[0]["icon"]
+	// fmt.Println(icon)
+	// foo1 := icon.([]uint8)
+	// fmt.Println(string(foo1))
+	// os.Exit(0)
 
 	// for rows.Next() {
 	// 	var card Card
@@ -333,65 +351,87 @@ func (v *Vault) GetEntry(cardType string, recordCategory, recordTitle, recordLog
 	return ret, nil
 }
 
-func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) (rows []map[string]interface{}, err error) {
-	query := v.db.Select("uuid", "type", "created_at", "field_updated_at", "title", "subtitle", "note", "trashed", "item.deleted", "category", "label", "value", "key", "last_used", "sensitive", "item.icon").Table("item").Joins("INNER JOIN itemfield ON uuid = item_uuid")
+func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
+	// SELECT uuid, type, created_at, field_updated_at, title,
+	// 	subtitle, note, trashed, item.deleted, category,
+	// 	label, value, key, last_used, sensitive, item.icon
+	// FROM item
+	// INNER JOIN itemfield ON uuid = item_uuid
+	// WHERE item.deleted = ? AND type = ? AND (title LIKE ? OR title LIKE ?) COLLATE NOCASE ORDER BY title
+	query := v.db.Select("item.uuid", "itemField.type", "item.created_at", "item.field_updated_at", "item.title", "item.subtitle", "item.note", "item.trashed", "item.deleted", "item.category", "itemfield.label", "itemfield.value AS raw_value", "item.key", "item.last_used", "itemfield.sensitive", "item.icon").Table("item").Joins("INNER JOIN itemfield ON uuid = item_uuid")
 
-	query = query.Where("item.deleted = ?", 0)
-	query = query.Where("type = ?", cardType)
+	query.Where("item.deleted = ?", 0)
+	query.Where("type = ?", cardType)
 
 	if len(recordCategory) > 0 {
+		categoryClone := v.db
 		for _, categoryName := range recordCategory {
+			var keyword = "LIKE"
 			if caseSensitive {
+				keyword = "GLOB"
 				categoryName = strings.Replace(categoryName, "%", "*", -1)
-				query = query.Or("category GLOB ?", categoryName)
-			} else {
-				query = query.Or("category LIKE ?", categoryName)
 			}
+			categoryClone = categoryClone.Or(
+				fmt.Sprintf("category %s ?", keyword),
+				categoryName,
+			)
 		}
+		query.Where(categoryClone)
 	}
 
 	if len(recordTitle) > 0 {
+		titleClone := v.db
 		for _, titleName := range recordTitle {
+			var keyword = "LIKE"
 			if caseSensitive {
+				keyword = "GLOB"
 				titleName = strings.Replace(titleName, "%", "*", -1)
-				query = query.Or("title GLOB ?", titleName)
-			} else {
-				query = query.Or("title LIKE ?", titleName)
 			}
+			titleClone = titleClone.Or(
+				fmt.Sprintf("title %s ?", keyword),
+				titleName,
+			)
 		}
+		query.Where(titleClone)
 	}
 
 	if len(recordLogin) > 0 {
+		loginClone := v.db
 		for _, loginName := range recordLogin {
+			var keyword = "LIKE"
 			if caseSensitive {
+				keyword = "GLOB"
 				loginName = strings.Replace(loginName, "%", "*", -1)
-				query = query.Or("subtitle GLOB ?", loginName)
-			} else {
-				query = query.Or("subtitle LIKE ?", loginName)
 			}
+			loginClone = loginClone.Or(
+				fmt.Sprintf("subtitle %s ?", keyword),
+				loginName,
+			)
 		}
+		query.Where(loginClone)
 	}
 
 	if len(recordUuid) > 0 {
+		uuidClone := v.db
 		for _, uuid := range recordUuid {
+			var keyword = "LIKE"
 			if caseSensitive {
+				keyword = "GLOB"
 				uuid = strings.Replace(uuid, "%", "*", -1)
-				query = query.Or("subtitle GLOB ?", uuid)
-			} else {
-				query = query.Or("subtitle LIKE ?", uuid)
 			}
+			uuidClone = uuidClone.Or(
+				fmt.Sprintf("uuid %s ?", keyword),
+				uuid,
+			)
 		}
+		query.Where(uuidClone)
+	}
+
+	if 1 == 2 {
+		fmt.Println(orderbyFlag)
 	}
 
 	query.Find(&rows)
-	pretty.Println(rows[0])
-	fmt.Println(rows[0]["icon"])
-	fmt.Println(string([]byte{123, 34, 102, 97, 118, 34, 58, 99, 108, 97}))
-	// key := rows[0]["subtitle"]
-	// str, ok := key.(string)
-	// fmt.Println(str)
-	// fmt.Println(ok)
-	os.Exit(0)
 
 	return rows, nil
 }
