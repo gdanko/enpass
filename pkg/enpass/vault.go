@@ -275,12 +275,12 @@ func (v *Vault) Close() {
 }
 
 // GetEntries : return the cardType entries in the Enpass database filtered by option flags.
-func (v *Vault) GetEntries(cardType string, cardCategory, cardTitle, cardLogin []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
+func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
 	if v.db == nil || v.vaultInfo.VaultName == "" {
 		return nil, errors.New("vault is not initialized")
 	}
 
-	rows, err := v.executeEntryQuery(cardType, cardCategory, cardTitle, cardLogin, caseSensitive, orderbyFlag)
+	rows, err := v.executeEntryQuery(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
@@ -312,8 +312,8 @@ func (v *Vault) GetEntries(cardType string, cardCategory, cardTitle, cardLogin [
 	return cards, nil
 }
 
-func (v *Vault) GetEntry(cardType string, cardCategory, cardTitle, cardLogin []string, caseSensitive bool, orderbyFlag []string, unique bool) (*Card, error) {
-	cards, err := v.GetEntries(cardType, cardCategory, cardTitle, cardLogin, caseSensitive, orderbyFlag)
+func (v *Vault) GetEntry(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string, unique bool) (*Card, error) {
+	cards, err := v.GetEntries(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards")
 	}
@@ -338,7 +338,7 @@ func (v *Vault) GetEntry(cardType string, cardCategory, cardTitle, cardLogin []s
 	return ret, nil
 }
 
-func (v *Vault) executeEntryQuery(cardType string, cardCategory, cardTitle, cardLogin []string, caseSensitive bool, orderbyFlag []string) (*sql.Rows, error) {
+func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) (*sql.Rows, error) {
 	query := `
 		SELECT uuid, type, created_at, field_updated_at, title,
 		       subtitle, note, trashed, item.deleted, category,
@@ -352,28 +352,36 @@ func (v *Vault) executeEntryQuery(cardType string, cardCategory, cardTitle, card
 
 	// We'll probably phase this out
 	if cardType != "" {
-		where = append(where, "type = ?")
+		where = append(where, "type LIKE ?")
 		values = append(values, cardType)
 	}
 
-	if len(cardCategory) > 0 {
-		whereItem, outputValues := processSqlIn(cardCategory, caseSensitive, "category")
+	if len(recordCategory) > 0 {
+		whereItem, outputValues := processSqlIn(recordCategory, caseSensitive, "category")
 		where = append(where, whereItem)
 		for _, outputValue := range outputValues {
 			values = append(values, outputValue)
 		}
 	}
 
-	if len(cardTitle) > 0 {
-		whereItem, outputValues := processSqlIn(cardTitle, caseSensitive, "title")
+	if len(recordTitle) > 0 {
+		whereItem, outputValues := processSqlIn(recordTitle, caseSensitive, "title")
 		where = append(where, whereItem)
 		for _, outputValue := range outputValues {
 			values = append(values, outputValue)
 		}
 	}
 
-	if len(cardLogin) > 0 {
-		whereItem, outputValues := processSqlIn(cardLogin, caseSensitive, "subtitle")
+	if len(recordLogin) > 0 {
+		whereItem, outputValues := processSqlIn(recordLogin, caseSensitive, "subtitle")
+		where = append(where, whereItem)
+		for _, outputValue := range outputValues {
+			values = append(values, outputValue)
+		}
+	}
+
+	if len(recordUuid) > 0 {
+		whereItem, outputValues := processSqlIn(recordUuid, caseSensitive, "uuid")
 		where = append(where, whereItem)
 		for _, outputValue := range outputValues {
 			values = append(values, outputValue)

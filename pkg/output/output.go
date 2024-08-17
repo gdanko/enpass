@@ -62,6 +62,7 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, t
 	} else if listFlag {
 		length := 10
 		for i, cardItem := range *cards {
+			fmt.Printf("%*s = %s\n", length, "uuid", cardItem.UUID)
 			fmt.Printf("%*s = %s\n", length, "title", cardItem.Title)
 			fmt.Printf("%*s = %s\n", length, "login", cardItem.Subtitle)
 			fmt.Printf("%*s = %s\n", length, "category", cardItem.Category)

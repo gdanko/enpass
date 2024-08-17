@@ -7,9 +7,6 @@ import (
 )
 
 var (
-	cardCategory     []string
-	cardLogin        []string
-	cardTitle        []string
 	cardType         string
 	caseSensitive    bool
 	clipboardPrimary bool
@@ -33,6 +30,10 @@ var (
 	nonInteractive bool
 	orderbyFlag    []string
 	pinEnable      bool
+	recordCategory []string
+	recordLogin    []string
+	recordTitle    []string
+	recordUuid     []string
 	rootCmd        = &cobra.Command{
 		Use:   "enpass",
 		Short: "enpass is a command line interface for the Enpass password manager",
