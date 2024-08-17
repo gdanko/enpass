@@ -74,13 +74,11 @@ type Card struct {
 	LastUsed       int64  `json:"last_used,omitempty" yaml:"last_used,omitempty"`
 	Sensitive      bool   `json:"sensitive,omitempty" yaml:"sensitive,omitempty"`
 	Icon           string `json:"icon,omitempty" yaml:"icon,omitempty"`
-	RawValue       string `json:"raw_value,omitempty" yaml:"raw_value,omitempty"`
 	DecryptedValue string `json:"decrypted_value,omitempty" yaml:"decrypted_value,omitempty"`
-	Key            string `json:"key,omitempty" yaml:"key,omitempty"`
 
 	// encrypted
-	value   string
-	itemKey []byte
+	RawValue string `json:"raw_value,omitempty" yaml:"raw_value,omitempty"`
+	Key      []byte `json:"key,omitempty" yaml:"key,omitempty"`
 }
 
 func (c *Card) IsTrashed() bool {
@@ -93,7 +91,7 @@ func (c *Card) IsDeleted() bool {
 
 func (c *Card) Decrypt() error {
 	// Intercept item fields without value
-	if len(c.value) == 0 {
+	if len(c.RawValue) == 0 {
 		return nil
 	}
 
@@ -104,8 +102,8 @@ func (c *Card) Decrypt() error {
 
 	// The key object is saved in binary from and actually consists of the
 	// AES key (32 bytes) and a nonce (12 bytes) for GCM
-	key := c.itemKey[:32]
-	nonce := c.itemKey[32:]
+	key := c.Key[:32]
+	nonce := c.Key[32:]
 
 	// If you deleted an item from Enpass, it stays in the database, but the
 	// entries are cleared
@@ -115,7 +113,7 @@ func (c *Card) Decrypt() error {
 
 	// The value object holds the ciphertext (same length as plaintext) +
 	// (authentication) tag (16 bytes) and is stored in hex
-	ciphertextAndTag, err := hex.DecodeString(c.value)
+	ciphertextAndTag, err := hex.DecodeString(c.RawValue)
 	if err != nil {
 		errors.Wrap(err, "could not decode card hex cipherstring")
 	}
