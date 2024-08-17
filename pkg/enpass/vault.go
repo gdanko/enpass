@@ -283,14 +283,24 @@ func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordL
 		return nil, errors.New("vault is not initialized")
 	}
 
-	rows, err := v.executeEntryQuery(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag)
+	cards, err := v.executeEntryQuery(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
 
-	var cards []Card
+	// var cards []Card
 
-	pretty.Print(rows)
+	for _, card := range cards {
+
+		card.value = card.RawValue
+		card.itemKey = []byte(card.Key)
+		err = card.Decrypt()
+		if err != nil {
+			panic(err)
+		}
+		pretty.Println(card)
+	}
+
 	os.Exit(0)
 
 	// pretty.Println(rows[0])
@@ -352,12 +362,6 @@ func (v *Vault) GetEntry(cardType string, recordCategory, recordTitle, recordLog
 }
 
 func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
-	// SELECT uuid, type, created_at, field_updated_at, title,
-	// 	subtitle, note, trashed, item.deleted, category,
-	// 	label, value, key, last_used, sensitive, item.icon
-	// FROM item
-	// INNER JOIN itemfield ON uuid = item_uuid
-	// WHERE item.deleted = ? AND type = ? AND (title LIKE ? OR title LIKE ?) COLLATE NOCASE ORDER BY title
 	query := v.db.Select("item.uuid", "itemField.type", "item.created_at", "item.field_updated_at", "item.title", "item.subtitle", "item.note", "item.trashed", "item.deleted", "item.category", "itemfield.label", "itemfield.value AS raw_value", "item.key", "item.last_used", "itemfield.sensitive", "item.icon").Table("item").Joins("INNER JOIN itemfield ON uuid = item_uuid")
 
 	query.Where("item.deleted = ?", 0)

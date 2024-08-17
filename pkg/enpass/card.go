@@ -76,6 +76,7 @@ type Card struct {
 	Icon           string `json:"icon,omitempty" yaml:"icon,omitempty"`
 	RawValue       string `json:"raw_value,omitempty" yaml:"raw_value,omitempty"`
 	DecryptedValue string `json:"decrypted_value,omitempty" yaml:"decrypted_value,omitempty"`
+	Key            string `json:"key,omitempty" yaml:"key,omitempty"`
 
 	// encrypted
 	value   string
