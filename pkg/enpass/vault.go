@@ -11,7 +11,6 @@ import (
 
 	// sqlcipher is necessary for sqlite crypto support
 	sqlcipher "github.com/gdanko/gorm-sqlcipher"
-	"github.com/kr/pretty"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -288,49 +287,13 @@ func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordL
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
 
-	// var cards []Card
-
-	for _, card := range cards {
-
-		card.value = card.RawValue
-		card.itemKey = []byte(card.Key)
+	for i, card := range cards {
 		err = card.Decrypt()
 		if err != nil {
 			panic(err)
 		}
-		pretty.Println(card)
+		cards[i] = card
 	}
-
-	os.Exit(0)
-
-	// pretty.Println(rows[0])
-	// icon := rows[0]["icon"]
-	// fmt.Println(icon)
-	// foo1 := icon.([]uint8)
-	// fmt.Println(string(foo1))
-	// os.Exit(0)
-
-	// for rows.Next() {
-	// 	var card Card
-
-	// 	// read the database columns into Card object
-	// 	if err := rows.Scan(
-	// 		&card.UUID, &card.Type, &card.CreatedAt, &card.UpdatedAt, &card.Title,
-	// 		&card.Subtitle, &card.Note, &card.Trashed, &card.Deleted, &card.Category,
-	// 		&card.Label, &card.value, &card.itemKey, &card.LastUsed, &card.Sensitive, &card.Icon,
-	// 	); err != nil {
-	// 		return nil, errors.Wrap(err, "could not read card from database")
-	// 	}
-
-	// 	card.RawValue = card.value
-
-	// 	err = card.Decrypt()
-	// 	if err != nil {
-	// 		return nil, errors.Wrap(err, "could not decrypt card value")
-	// 	}
-
-	// 	cards = append(cards, card)
-	// }
 
 	return cards, nil
 }
@@ -367,37 +330,39 @@ func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, 
 	query.Where("item.deleted = ?", 0)
 	query.Where("type = ?", cardType)
 
-	query.Where(v.db.Where("title LIKE ?", "%GitH%").Or("title LIKE ?", "Amazon"))
-	query.Where(v.db.Where("category LIKE ?", "computer"))
+	// query.Where(v.db.Where("title LIKE ?", "%GitH%").Or("title LIKE ?", "Amazon"))
+	// query.Where(v.db.Where("category LIKE ?", "computer"))
 
 	if len(recordCategory) > 0 {
-		// categoryClone := v.db
+		categoryClone := v.db
 		for _, categoryName := range recordCategory {
 			var keyword = "LIKE"
 			if caseSensitive {
 				keyword = "GLOB"
 				categoryName = strings.Replace(categoryName, "%", "*", -1)
 			}
-			v.db = v.db.Or(
+			categoryClone = categoryClone.Or(
 				fmt.Sprintf("category %s ?", keyword),
 				categoryName,
 			)
 		}
+		query.Where(categoryClone)
 	}
 
 	if len(recordTitle) > 0 {
-		// titleClone := v.db
+		titleClone := v.db
 		for _, titleName := range recordTitle {
 			var keyword = "LIKE"
 			if caseSensitive {
 				keyword = "GLOB"
 				titleName = strings.Replace(titleName, "%", "*", -1)
 			}
-			v.db = v.db.Or(
+			titleClone = titleClone.Or(
 				fmt.Sprintf("title %s ?", keyword),
 				titleName,
 			)
 		}
+		query.Where(titleClone)
 	}
 
 	if len(recordLogin) > 0 {
