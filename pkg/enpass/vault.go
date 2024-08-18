@@ -13,6 +13,7 @@ import (
 	sqlcipher "github.com/gdanko/gorm-sqlcipher"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/thoas/go-funk"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
 )
@@ -24,13 +25,14 @@ var (
 		SkipDefaultTransaction: true,
 		Logger:                 gormLogger.Default.LogMode(gormLogger.Info),
 	}
-	rows      []Card
-	tableName = "item"
-	// validFields = []string{
-	// 	"category",
-	// 	"login",
-	// 	"title",
-	// }
+	rows        []Card
+	tableName   = "item"
+	validFields = []string{
+		"category",
+		"login",
+		"title",
+		"uuid",
+	}
 )
 
 const (
@@ -282,17 +284,34 @@ func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordL
 		return nil, errors.New("vault is not initialized")
 	}
 
-	cards, err := v.executeEntryQuery(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag)
+	rows, err := v.executeEntryQuery(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
 
-	for i, card := range cards {
+	var cards []Card
+	for _, card := range rows {
 		err = card.Decrypt()
 		if err != nil {
 			panic(err)
 		}
-		cards[i] = card
+		cards = append(cards, Card{
+			UUID:           card.UUID,
+			CreatedAt:      card.CreatedAt,
+			Type:           card.Type,
+			UpdatedAt:      card.UpdatedAt,
+			Title:          card.Title,
+			Subtitle:       card.Subtitle,
+			Note:           card.Note,
+			Trashed:        card.Trashed,
+			Deleted:        card.Deleted,
+			Category:       card.Category,
+			Label:          card.Label,
+			LastUsed:       card.LastUsed,
+			Sensitive:      card.Sensitive,
+			Icon:           card.Icon,
+			DecryptedValue: card.DecryptedValue,
+		})
 	}
 
 	return cards, nil
@@ -324,81 +343,50 @@ func (v *Vault) GetEntry(cardType string, recordCategory, recordTitle, recordLog
 	return ret, nil
 }
 
+func (v *Vault) processFilters(filterList []string, columnName string, caseSensitive bool) (tx *gorm.DB) {
+	var keyword string
+	tx = v.db.Session(&gorm.Session{NewDB: true})
+
+	if len(filterList) > 0 {
+		for _, item := range filterList {
+			keyword = "LIKE"
+			if caseSensitive {
+				keyword = "GLOB"
+				item = strings.Replace(item, "%", "*", -1)
+			}
+			tx = tx.Or(
+				fmt.Sprintf("%s %s ?", columnName, keyword),
+				item,
+			)
+		}
+	}
+	return tx
+}
+
 func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
 	query := v.db.Select("item.uuid", "itemField.type", "item.created_at", "item.field_updated_at", "item.title", "item.subtitle", "item.note", "item.trashed", "item.deleted", "item.category", "itemfield.label", "itemfield.value AS raw_value", "item.key", "item.last_used", "itemfield.sensitive", "item.icon").Table("item").Joins("INNER JOIN itemfield ON uuid = item_uuid")
 
 	query.Where("item.deleted = ?", 0)
 	query.Where("type = ?", cardType)
 
-	// query.Where(v.db.Where("title LIKE ?", "%GitH%").Or("title LIKE ?", "Amazon"))
-	// query.Where(v.db.Where("category LIKE ?", "computer"))
+	query.Where(v.processFilters(recordCategory, "category", caseSensitive))
+	query.Where(v.processFilters(recordTitle, "title", caseSensitive))
+	query.Where(v.processFilters(recordLogin, "subtitle", caseSensitive))
+	query.Where(v.processFilters(recordUuid, "uuid", caseSensitive))
 
-	if len(recordCategory) > 0 {
-		categoryClone := v.db
-		for _, categoryName := range recordCategory {
-			var keyword = "LIKE"
-			if caseSensitive {
-				keyword = "GLOB"
-				categoryName = strings.Replace(categoryName, "%", "*", -1)
+	if len(orderbyFlag) > 0 {
+		badFields := funk.SubtractString(orderbyFlag, validFields)
+		goodFields := funk.IntersectString(orderbyFlag, validFields)
+		if len(badFields) > 0 {
+			v.logger.Warningf("the following fields cannot be used by --orderby: %s\n", strings.Join(badFields, ", "))
+			if len(goodFields) <= 0 {
+				v.logger.Warningf("after removing invalid --orderby fields, there are no fields remaining")
 			}
-			categoryClone = categoryClone.Or(
-				fmt.Sprintf("category %s ?", keyword),
-				categoryName,
-			)
 		}
-		query.Where(categoryClone)
-	}
 
-	if len(recordTitle) > 0 {
-		titleClone := v.db
-		for _, titleName := range recordTitle {
-			var keyword = "LIKE"
-			if caseSensitive {
-				keyword = "GLOB"
-				titleName = strings.Replace(titleName, "%", "*", -1)
-			}
-			titleClone = titleClone.Or(
-				fmt.Sprintf("title %s ?", keyword),
-				titleName,
-			)
+		if len(goodFields) > 0 {
+			query.Order(strings.Join(goodFields, ","))
 		}
-		query.Where(titleClone)
-	}
-
-	if len(recordLogin) > 0 {
-		loginClone := v.db
-		for _, loginName := range recordLogin {
-			var keyword = "LIKE"
-			if caseSensitive {
-				keyword = "GLOB"
-				loginName = strings.Replace(loginName, "%", "*", -1)
-			}
-			loginClone = loginClone.Or(
-				fmt.Sprintf("subtitle %s ?", keyword),
-				loginName,
-			)
-		}
-		query.Where(loginClone)
-	}
-
-	if len(recordUuid) > 0 {
-		uuidClone := v.db
-		for _, uuid := range recordUuid {
-			var keyword = "LIKE"
-			if caseSensitive {
-				keyword = "GLOB"
-				uuid = strings.Replace(uuid, "%", "*", -1)
-			}
-			uuidClone = uuidClone.Or(
-				fmt.Sprintf("uuid %s ?", keyword),
-				uuid,
-			)
-		}
-		query.Where(uuidClone)
-	}
-
-	if 1 == 2 {
-		fmt.Println(orderbyFlag)
 	}
 
 	query.Find(&rows)
