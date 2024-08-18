@@ -1,7 +1,6 @@
 package enpass
 
 import (
-	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -11,18 +10,30 @@ import (
 	"strings"
 
 	// sqlcipher is necessary for sqlite crypto support
-
-	_ "github.com/mutecomm/go-sqlcipher"
+	sqlcipher "github.com/gdanko/gorm-sqlcipher"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 )
 
-var validFields = []string{
-	"category",
-	"login",
-	"title",
-}
+var (
+	gormConfig = &gorm.Config{
+		PrepareStmt:            true,
+		QueryFields:            true,
+		SkipDefaultTransaction: true,
+		Logger:                 gormLogger.Default.LogMode(gormLogger.Info),
+	}
+	rows        []Card
+	tableName   = "item"
+	validFields = []string{
+		"category",
+		"login",
+		"title",
+		"uuid",
+	}
+)
 
 const (
 	// filename of the sqlite vault file
@@ -30,6 +41,14 @@ const (
 	// contains info about your vault
 	vaultInfoFileName = "vault.json"
 )
+
+type Tabler interface {
+	TableName() string
+}
+
+func (Card) TableName() string {
+	return tableName
+}
 
 // Vault : vault is the container object for vault-related operations
 type Vault struct {
@@ -50,7 +69,7 @@ type Vault struct {
 	//attachments []string
 
 	// pointer to our opened database
-	db *sql.DB
+	db *gorm.DB
 
 	// vault.json : contains info about your vault for synchronizing
 	vaultInfo VaultInfo
@@ -64,24 +83,6 @@ type VaultCredentials struct {
 
 func (credentials *VaultCredentials) IsComplete() bool {
 	return credentials.Password != "" || credentials.DBKey != nil
-}
-
-func processSqlIn(items []string, caseSensitive bool, columnName string) (whereItem string, outputValues []string) {
-	var orSlice []string
-	for _, value := range items {
-		if caseSensitive {
-			if strings.Contains(value, "%") {
-				value = strings.Replace(value, "%", "*", -1)
-				orSlice = append(orSlice, fmt.Sprintf("%s GLOB ?", columnName))
-			} else {
-				orSlice = append(orSlice, fmt.Sprintf("%s GLOB ?", columnName))
-			}
-		} else {
-			orSlice = append(orSlice, fmt.Sprintf("%s LIKE ?", columnName))
-		}
-		outputValues = append(outputValues, value)
-	}
-	return fmt.Sprintf("(%s)", strings.Join(orSlice, " OR ")), outputValues
 }
 
 // FileOrDirectoryExists : Determine if a file or directory exists
@@ -182,7 +183,7 @@ func (v *Vault) openEncryptedDatabase(path string, dbKey []byte) (err error) {
 		hex.EncodeToString(dbKey)[:masterKeyLength],
 	)
 
-	v.db, err = sql.Open("sqlite3", dbName)
+	v.db, err = gorm.Open(sqlcipher.Open(dbName), gormConfig)
 	if err != nil {
 		return errors.Wrap(err, "could not open database")
 	}
@@ -251,27 +252,30 @@ func (v *Vault) Open(credentials *VaultCredentials) error {
 		return errors.Wrap(err, "could not open encrypted database")
 	}
 
-	var tableName string
-	err := v.db.QueryRow(`
-		SELECT name
-		FROM sqlite_master
-		WHERE type='table' AND name='item'
-	`).Scan(&tableName)
-	if err != nil {
-		return errors.Wrap(err, "could not connect to database")
-	} else if tableName != "item" {
-		return errors.New("could not connect to database")
+	type Result struct {
+		Name string `db:"name"`
 	}
 
+	var (
+		result  Result
+		results []Result
+	)
+
+	v.db.Select("name").Table("sqlite_master").Where("type = ?", "table").Where("name = ?", "item").Find(&results)
+	for _, result = range results {
+		if result.Name != "item" {
+			return errors.New("could not connect to database")
+		}
+	}
 	return nil
 }
 
 // Close : close the connection to the underlying database. Always call this in the end.
 func (v *Vault) Close() {
-	if v.db != nil {
-		err := v.db.Close()
-		v.logger.WithError(err).Debug("closed vault")
-	}
+	// if v.db != nil {
+	// 	err := v.db.Close()
+	// 	v.logger.WithError(err).Debug("closed vault")
+	// }
 }
 
 // GetEntries : return the cardType entries in the Enpass database filtered by option flags.
@@ -286,27 +290,28 @@ func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordL
 	}
 
 	var cards []Card
-
-	for rows.Next() {
-		var card Card
-
-		// read the database columns into Card object
-		if err := rows.Scan(
-			&card.UUID, &card.Type, &card.CreatedAt, &card.UpdatedAt, &card.Title,
-			&card.Subtitle, &card.Note, &card.Trashed, &card.Deleted, &card.Category,
-			&card.Label, &card.value, &card.itemKey, &card.LastUsed, &card.Sensitive, &card.Icon,
-		); err != nil {
-			return nil, errors.Wrap(err, "could not read card from database")
-		}
-
-		card.RawValue = card.value
-
+	for _, card := range rows {
 		err = card.Decrypt()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not decrypt card value")
+			panic(err)
 		}
-
-		cards = append(cards, card)
+		cards = append(cards, Card{
+			UUID:           card.UUID,
+			CreatedAt:      card.CreatedAt,
+			Type:           card.Type,
+			UpdatedAt:      card.UpdatedAt,
+			Title:          card.Title,
+			Subtitle:       card.Subtitle,
+			Note:           card.Note,
+			Trashed:        card.Trashed,
+			Deleted:        card.Deleted,
+			Category:       card.Category,
+			Label:          card.Label,
+			LastUsed:       card.LastUsed,
+			Sensitive:      card.Sensitive,
+			Icon:           card.Icon,
+			DecryptedValue: card.DecryptedValue,
+		})
 	}
 
 	return cards, nil
@@ -338,61 +343,36 @@ func (v *Vault) GetEntry(cardType string, recordCategory, recordTitle, recordLog
 	return ret, nil
 }
 
-func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) (*sql.Rows, error) {
-	query := `
-		SELECT uuid, type, created_at, field_updated_at, title,
-		       subtitle, note, trashed, item.deleted, category,
-		       label, value, key, last_used, sensitive, item.icon
-		FROM item
-		INNER JOIN itemfield ON uuid = item_uuid
-	`
+func (v *Vault) processFilters(filterList []string, columnName string, caseSensitive bool) (tx *gorm.DB) {
+	var keyword string
+	tx = v.db.Session(&gorm.Session{NewDB: true})
 
-	where := []string{"item.deleted = ?"}
-	values := []interface{}{0}
-
-	// We'll probably phase this out
-	if cardType != "" {
-		where = append(where, "type LIKE ?")
-		values = append(values, cardType)
-	}
-
-	if len(recordCategory) > 0 {
-		whereItem, outputValues := processSqlIn(recordCategory, caseSensitive, "category")
-		where = append(where, whereItem)
-		for _, outputValue := range outputValues {
-			values = append(values, outputValue)
+	if len(filterList) > 0 {
+		for _, item := range filterList {
+			keyword = "LIKE"
+			if caseSensitive {
+				keyword = "GLOB"
+				item = strings.Replace(item, "%", "*", -1)
+			}
+			tx = tx.Or(
+				fmt.Sprintf("%s %s ?", columnName, keyword),
+				item,
+			)
 		}
 	}
+	return tx
+}
 
-	if len(recordTitle) > 0 {
-		whereItem, outputValues := processSqlIn(recordTitle, caseSensitive, "title")
-		where = append(where, whereItem)
-		for _, outputValue := range outputValues {
-			values = append(values, outputValue)
-		}
-	}
+func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
+	query := v.db.Select("item.uuid", "itemField.type", "item.created_at", "item.field_updated_at", "item.title", "item.subtitle", "item.note", "item.trashed", "item.deleted", "item.category", "itemfield.label", "itemfield.value AS raw_value", "item.key", "item.last_used", "itemfield.sensitive", "item.icon").Table("item").Joins("INNER JOIN itemfield ON uuid = item_uuid")
 
-	if len(recordLogin) > 0 {
-		whereItem, outputValues := processSqlIn(recordLogin, caseSensitive, "subtitle")
-		where = append(where, whereItem)
-		for _, outputValue := range outputValues {
-			values = append(values, outputValue)
-		}
-	}
+	query.Where("item.deleted = ?", 0)
+	query.Where("type = ?", cardType)
 
-	if len(recordUuid) > 0 {
-		whereItem, outputValues := processSqlIn(recordUuid, caseSensitive, "uuid")
-		where = append(where, whereItem)
-		for _, outputValue := range outputValues {
-			values = append(values, outputValue)
-		}
-	}
-
-	query += " WHERE " + strings.Join(where, " AND ")
-
-	if !caseSensitive {
-		query += " COLLATE NOCASE"
-	}
+	query.Where(v.processFilters(recordCategory, "category", caseSensitive))
+	query.Where(v.processFilters(recordTitle, "title", caseSensitive))
+	query.Where(v.processFilters(recordLogin, "subtitle", caseSensitive))
+	query.Where(v.processFilters(recordUuid, "uuid", caseSensitive))
 
 	if len(orderbyFlag) > 0 {
 		badFields := funk.SubtractString(orderbyFlag, validFields)
@@ -405,11 +385,11 @@ func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, 
 		}
 
 		if len(goodFields) > 0 {
-			query += fmt.Sprintf(" ORDER BY %s", strings.Join(goodFields, ","))
+			query.Order(strings.Join(goodFields, ","))
 		}
 	}
 
-	v.logger.Trace("query: ", query)
-	v.logger.Trace("values: ", values)
-	return v.db.Query(query, values...)
+	query.Find(&rows)
+
+	return rows, nil
 }
