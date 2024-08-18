@@ -23,7 +23,7 @@ var (
 		PrepareStmt:            true,
 		QueryFields:            true,
 		SkipDefaultTransaction: true,
-		Logger:                 gormLogger.Default.LogMode(gormLogger.Info),
+		Logger:                 gormLogger.Default.LogMode(gormLogger.Silent),
 	}
 	rows        []Card
 	tableName   = "item"
