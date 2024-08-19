@@ -42,13 +42,14 @@ Flags:
   -c, --category stringArray   Filter based on record category. Wildcards (%) are allowed. Can be used multiple times.
   -h, --help                   help for enpass
   -k, --keyfile string         Path to your Enpass vault keyfile.
-      --log string             The log level, one of: fatal, error, warn, info, debug, trace, panic (default "info")
+      --log string             The log level, one of: debug, error, fatal, info, panic, trace, warn (default "info")
   -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
   -n, --nonInteractive         Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
   -t, --title stringArray      Filter based on record title. Wildcards (%) are allowed. Can be used multiple times.
       --type string            The type of your card. (password, ...) (default "password")
+  -u, --uuid stringArray       Filter based on record uuid. Can be used multiple times.
   -v, --vault string           Path to your Enpass vault.
 
 Use "enpass [command] --help" for more information about a command.
@@ -73,13 +74,14 @@ Flags:
 Global Flags:
   -c, --category stringArray   Filter based on record category. Wildcards (%) are allowed. Can be used multiple times.
   -k, --keyfile string         Path to your Enpass vault keyfile.
-      --log string             The log level, one of: trace, panic, fatal, error, warn, info, debug (default "info")
+      --log string             The log level, one of: debug, error, fatal, info, panic, trace, warn (default "info")
   -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
   -n, --nonInteractive         Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
   -t, --title stringArray      Filter based on record title. Wildcards (%) are allowed. Can be used multiple times.
       --type string            The type of your card. (password, ...) (default "password")
+  -u, --uuid stringArray       Filter based on record uuid. Can be used multiple times.
   -v, --vault string           Path to your Enpass vault.
 ```
 
