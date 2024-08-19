@@ -3,11 +3,13 @@ package enpass
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	// sqlcipher is necessary for sqlite crypto support
 	sqlcipher "github.com/gdanko/gorm-sqlcipher"
@@ -15,16 +17,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	"gorm.io/gorm"
-	gormLogger "gorm.io/gorm/logger"
+	"gorm.io/gorm/logger"
 )
 
 var (
-	gormConfig = &gorm.Config{
-		PrepareStmt:            true,
-		QueryFields:            true,
-		SkipDefaultTransaction: true,
-		Logger:                 gormLogger.Default.LogMode(gormLogger.Silent),
-	}
 	rows        []Card
 	tableName   = "item"
 	validFields = []string{
@@ -174,7 +170,35 @@ func NewVault(vaultPath string, logLevel logrus.Level) (*Vault, error) {
 	return &v, nil
 }
 
-func (v *Vault) openEncryptedDatabase(path string, dbKey []byte) (err error) {
+func (v *Vault) openEncryptedDatabase(path string, dbKey []byte, logLevel logrus.Level) (err error) {
+	var levelMap = map[logrus.Level]logger.LogLevel{
+		logrus.PanicLevel: logger.Silent,
+		logrus.FatalLevel: logger.Silent,
+		logrus.ErrorLevel: logger.Silent,
+		logrus.WarnLevel:  logger.Silent,
+		logrus.InfoLevel:  logger.Silent,
+		logrus.DebugLevel: logger.Info,
+		logrus.TraceLevel: logger.Info,
+	}
+
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second,        // Slow SQL threshold
+			LogLevel:                  levelMap[logLevel], // Log level
+			IgnoreRecordNotFoundError: true,               // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,               // Don't include params in the SQL log
+			Colorful:                  true,               // Disable color
+		},
+	)
+
+	gormConfig := &gorm.Config{
+		PrepareStmt:            true,
+		QueryFields:            true,
+		SkipDefaultTransaction: true,
+		Logger:                 newLogger,
+	}
+
 	// The raw key for the sqlcipher database is given
 	// by the first 64 characters of the hex-encoded key
 	dbName := fmt.Sprintf(
@@ -241,14 +265,14 @@ func (v *Vault) generateAndSetDBKey(credentials *VaultCredentials) error {
 }
 
 // Open : setup a connection to the Enpass database. Call this before doing anything.
-func (v *Vault) Open(credentials *VaultCredentials) error {
+func (v *Vault) Open(credentials *VaultCredentials, logLevel logrus.Level) error {
 	v.logger.Debug("generating database key")
 	if err := v.generateAndSetDBKey(credentials); err != nil {
 		return errors.Wrap(err, "could not generate database key")
 	}
 
 	v.logger.Debug("opening encrypted database")
-	if err := v.openEncryptedDatabase(v.databaseFilename, credentials.DBKey); err != nil {
+	if err := v.openEncryptedDatabase(v.databaseFilename, credentials.DBKey, logLevel); err != nil {
 		return errors.Wrap(err, "could not open encrypted database")
 	}
 
