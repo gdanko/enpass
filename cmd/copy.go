@@ -7,7 +7,6 @@ import (
 	"github.com/gdanko/enpass/pkg/clipboard"
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/gdanko/enpass/util"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -16,8 +15,8 @@ var (
 		Use:          "copy",
 		Short:        "Copy the password of a vault entry to the clipboard",
 		Long:         "Copy the password of a vault entry to the clipboard",
-		PreRunE:      copyPreRunCmd,
-		RunE:         copyRunCmd,
+		PreRun:       copyPreRunCmd,
+		Run:          copyRunCmd,
 		SilenceUsage: true,
 	}
 )
@@ -27,29 +26,30 @@ func init() {
 	rootCmd.AddCommand(copyCmd)
 }
 
-func copyPreRunCmd(cmd *cobra.Command, args []string) error {
-	logger = logrus.New()
+func copyPreRunCmd(cmd *cobra.Command, args []string) {
 	logLevel = logLevelMap[logLevelStr]
-	logger.SetLevel(logLevel)
-	return nil
+	logger = util.ConfigureLogger(logLevel)
 }
 
-func copyRunCmd(cmd *cobra.Command, args []string) error {
+func copyRunCmd(cmd *cobra.Command, args []string) {
 	if vaultPath == "" {
 		vaultPath, err = enpass.FindDefaultVaultPath()
 		if err != nil {
-			return err
+			logger.Error(err)
+			logger.Exit(2)
 		}
 	}
 
 	err = enpass.ValidateVaultPath(vaultPath)
 	if err != nil {
-		return err
+		logger.Error(err)
+		logger.Exit(2)
 	}
 
 	vault, credentials, err = util.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel)
 	if err != nil {
-		return err
+		logger.Error(err)
+		logger.Exit(2)
 	}
 
 	defer func() {
@@ -63,7 +63,8 @@ func copyRunCmd(cmd *cobra.Command, args []string) error {
 
 	card, err := vault.GetEntry(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag, true)
 	if err != nil {
-		return err
+		logger.Error(err)
+		logger.Exit(2)
 	}
 
 	if clipboardPrimary {
@@ -76,6 +77,4 @@ func copyRunCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("The password for \"%s\" was copied to the clipboard\n", strings.TrimSpace(card.Title))
-
-	return nil
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/gdanko/enpass/util"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -14,8 +13,8 @@ var (
 		Use:          "pass",
 		Short:        "Print the password of a vault entry to STDOUT",
 		Long:         "Print the password of a vault entry to STDOUT",
-		PreRunE:      passPreRunCmd,
-		RunE:         passRunCmd,
+		PreRun:       passPreRunCmd,
+		Run:          passRunCmd,
 		SilenceUsage: true,
 	}
 )
@@ -25,29 +24,30 @@ func init() {
 	rootCmd.AddCommand(passCmd)
 }
 
-func passPreRunCmd(cmd *cobra.Command, args []string) error {
-	logger = logrus.New()
+func passPreRunCmd(cmd *cobra.Command, args []string) {
 	logLevel = logLevelMap[logLevelStr]
-	logger.SetLevel(logLevel)
-	return nil
+	logger = util.ConfigureLogger(logLevel)
 }
 
-func passRunCmd(cmd *cobra.Command, args []string) error {
+func passRunCmd(cmd *cobra.Command, args []string) {
 	if vaultPath == "" {
 		vaultPath, err = enpass.FindDefaultVaultPath()
 		if err != nil {
-			return err
+			logger.Error(err)
+			logger.Exit(2)
 		}
 	}
 
 	err = enpass.ValidateVaultPath(vaultPath)
 	if err != nil {
-		return err
+		logger.Error(err)
+		logger.Exit(2)
 	}
 
 	vault, credentials, err = util.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel)
 	if err != nil {
-		return err
+		logger.Error(err)
+		logger.Exit(2)
 	}
 
 	defer func() {
@@ -61,9 +61,8 @@ func passRunCmd(cmd *cobra.Command, args []string) error {
 
 	card, err := vault.GetEntry(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag, true)
 	if err != nil {
-		return err
+		logger.Error(err)
+		logger.Exit(2)
 	}
 	fmt.Println(card.DecryptedValue)
-
-	return nil
 }

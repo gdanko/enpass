@@ -13,8 +13,8 @@ var (
 		Use:          "list",
 		Short:        "List vault entries without displaying the password",
 		Long:         "List vault entries without displaying the password",
-		PreRunE:      listPreRunCmd,
-		RunE:         listRunCmd,
+		PreRun:       listPreRunCmd,
+		Run:          listRunCmd,
 		SilenceUsage: true,
 	}
 	logger *logrus.Logger
@@ -25,29 +25,30 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 }
 
-func listPreRunCmd(cmd *cobra.Command, args []string) error {
-	logger = logrus.New()
+func listPreRunCmd(cmd *cobra.Command, args []string) {
 	logLevel = logLevelMap[logLevelStr]
-	logger.SetLevel(logLevel)
-	return nil
+	logger = util.ConfigureLogger(logLevel)
 }
 
-func listRunCmd(cmd *cobra.Command, args []string) error {
+func listRunCmd(cmd *cobra.Command, args []string) {
 	if vaultPath == "" {
 		vaultPath, err = enpass.FindDefaultVaultPath()
 		if err != nil {
-			return err
+			logger.Error(err)
+			logger.Exit(2)
 		}
 	}
 
 	err = enpass.ValidateVaultPath(vaultPath)
 	if err != nil {
-		return err
+		logger.Error(err)
+		logger.Exit(2)
 	}
 
 	vault, credentials, err = util.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel)
 	if err != nil {
-		return err
+		logger.Error(err)
+		logger.Exit(2)
 	}
 
 	defer func() {
@@ -61,10 +62,9 @@ func listRunCmd(cmd *cobra.Command, args []string) error {
 
 	cards, err := vault.GetEntries(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag)
 	if err != nil {
-		return err
+		logger.Error(err)
+		logger.Exit(2)
 	}
 
 	output.GenerateOutput(logger, "list", jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, &cards)
-
-	return nil
 }
