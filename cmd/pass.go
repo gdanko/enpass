@@ -53,7 +53,7 @@ func passRunCmd(cmd *cobra.Command, args []string) error {
 	defer func() {
 		vault.Close()
 	}()
-	if err := vault.Open(credentials); err != nil {
+	if err := vault.Open(credentials, logLevel); err != nil {
 		logger.WithError(err).Error("could not open vault")
 		logger.Exit(2)
 	}
