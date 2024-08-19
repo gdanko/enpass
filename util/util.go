@@ -3,6 +3,7 @@ package util
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -98,9 +99,10 @@ func OpenVault(logger *logrus.Logger, pinEnable bool, nonInteractive bool, vault
 }
 
 func ReturnLogLevels(levelMap map[string]logrus.Level) string {
-	var logLevels []string
+	logLevels := make([]string, 0, len(levelMap))
 	for k := range levelMap {
 		logLevels = append(logLevels, k)
 	}
+	sort.Strings(logLevels)
 	return strings.Join(logLevels, ", ")
 }
