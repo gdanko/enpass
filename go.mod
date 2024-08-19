@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/atotto/clipboard v0.1.4
+	github.com/fatih/color v1.17.0
 	github.com/gdanko/gorm-sqlcipher v0.0.0-20240817163813-e8f9693cc5d6
 	github.com/markkurossi/tabulate v0.0.0-20230223130100-d4965869b123
 	github.com/miquella/ask v1.0.0
@@ -20,6 +21,8 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mutecomm/go-sqlcipher v0.0.0-20190227152316-55dbde17881f // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/net v0.21.0 // indirect
