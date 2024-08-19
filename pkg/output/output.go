@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/markkurossi/tabulate"
 	"github.com/sirupsen/logrus"
@@ -100,17 +101,23 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, t
 		}
 		tab.Print(os.Stdout)
 	} else {
-		for _, cardItem := range *cards {
+		for i, cardItem := range *cards {
 			if cmdType == "list" {
-				logger.Printf(
-					"> title: %s, login: %s, category: %s",
+				c := color.New(color.FgCyan)
+				title := c.Sprintf("[%05d] >", i+1)
+				fmt.Printf(
+					"%s title: %s, login: %s, category: %s\n",
+					title,
 					cardItem.Title,
 					cardItem.Subtitle,
 					cardItem.Category,
 				)
 			} else if cmdType == "show" {
-				logger.Printf(
-					"> title: %s, login: %s, category: %s, %s: %s",
+				c := color.New(color.FgRed)
+				title := c.Sprintf("[%05d] >", i+1)
+				fmt.Printf(
+					"%s title: %s, login: %s, category: %s, %s: %s\n",
+					title,
 					cardItem.Title,
 					cardItem.Subtitle,
 					cardItem.Category,
