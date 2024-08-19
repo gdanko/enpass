@@ -11,6 +11,7 @@ import (
 	"github.com/gdanko/enpass/pkg/unlock"
 	"github.com/miquella/ask"
 	"github.com/sirupsen/logrus"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 const (
@@ -27,6 +28,27 @@ func prompt(logger *logrus.Logger, nonInteractive bool, msg string) string {
 		}
 	}
 	return ""
+}
+
+func ConfigureLogger(logLevel logrus.Level) (logger *logrus.Logger) {
+	logger = &logrus.Logger{
+		Out:   os.Stderr,
+		Level: logLevel,
+		// Formatter: &easy.Formatter{
+		// 	TimestampFormat: "2006-01-02 15:04:05",
+		// 	LogFormat:       "[%lvl%]: %time% - %msg%",
+		// },
+		Formatter: &prefixed.TextFormatter{
+			DisableColors:    false,
+			DisableTimestamp: true,
+			TimestampFormat:  "2006-01-02 15:04:05",
+			FullTimestamp:    true,
+			ForceFormatting:  true,
+		},
+	}
+
+	logger.SetLevel(logLevel)
+	return logger
 }
 
 func InitializeStore(logger *logrus.Logger, vaultPath string, nonInteractive bool) *unlock.SecureStore {
