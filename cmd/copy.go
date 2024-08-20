@@ -46,7 +46,7 @@ func copyRunCmd(cmd *cobra.Command, args []string) {
 		logger.Exit(2)
 	}
 
-	vault, credentials, err = util.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel)
+	vault, credentials, err = enpass.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel)
 	if err != nil {
 		logger.Error(err)
 		logger.Exit(2)
