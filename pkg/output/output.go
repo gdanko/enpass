@@ -1,22 +1,22 @@
 package output
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/gdanko/enpass/pkg/enpass"
+	"github.com/hokaccha/go-prettyjson"
 	"github.com/markkurossi/tabulate"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
-func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag bool, cards *[]enpass.Card) {
+func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag bool, cards *[]enpass.Card) {
 	var (
-		err        error
+		// err        error
+		// jsonBytes  []byte
 		yamlString string
 	)
 
@@ -51,13 +51,20 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, t
 	cards = &cardsPruned
 
 	if jsonFlag {
-		jsonBytes, _ := json.Marshal(cards)
-		var prettyJSON bytes.Buffer
-		if err = json.Indent(&prettyJSON, jsonBytes, "", "    "); err != nil {
-			fmt.Printf("failed to parse the output as JSON: %s\n", err)
-			os.Exit(1)
+		disabledColor := false
+		if nocolorFlag {
+			disabledColor = true
 		}
-		fmt.Println(prettyJSON.String())
+		formatter := prettyjson.NewFormatter()
+		formatter.DisabledColor = disabledColor
+		formatter.Indent = 4
+
+		jsonBytes, err := formatter.Marshal(cards)
+		if err != nil {
+			logger.Errorf("failed to parse the output to JSON, %s", err)
+			logger.Exit(2)
+		}
+		fmt.Println(string(jsonBytes))
 
 	} else if yamlFlag {
 		yamlBytes, _ := yaml.Marshal(cards)
