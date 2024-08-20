@@ -9,7 +9,11 @@ import (
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
-func ConfigureLogger(logLevel logrus.Level) (logger *logrus.Logger) {
+func ConfigureLogger(logLevel logrus.Level, nocolorFlag bool) (logger *logrus.Logger) {
+	disableColors := false
+	if nocolorFlag {
+		disableColors = true
+	}
 	logger = &logrus.Logger{
 		Out:   os.Stderr,
 		Level: logLevel,
@@ -18,7 +22,7 @@ func ConfigureLogger(logLevel logrus.Level) (logger *logrus.Logger) {
 		// 	LogFormat:       "[%lvl%]: %time% - %msg%",
 		// },
 		Formatter: &prefixed.TextFormatter{
-			DisableColors:    false,
+			DisableColors:    disableColors,
 			DisableTimestamp: true,
 			TimestampFormat:  "2006-01-02 15:04:05",
 			FullTimestamp:    true,
