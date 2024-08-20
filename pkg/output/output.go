@@ -4,16 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fatih/color"
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/sirupsen/logrus"
 )
 
 const escape = "\x1b"
-
-func format(attr color.Attribute) string {
-	return fmt.Sprintf("%s[%dm", escape, attr)
-}
 
 func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag bool, cards *[]enpass.Card) {
 	if len(*cards) <= 0 {

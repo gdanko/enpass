@@ -19,6 +19,10 @@ var (
 	yamlString string
 )
 
+func format(attr color.Attribute) string {
+	return fmt.Sprintf("%s[%dm", escape, attr)
+}
+
 func doYamlOutput(logger *logrus.Logger, cards []enpass.Card, nocolorFlag bool) {
 	yamlBytes, err = yaml.Marshal(cards)
 	if err != nil {
