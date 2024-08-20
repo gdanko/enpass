@@ -25,7 +25,7 @@ func init() {
 
 func showPreRunCmd(cmd *cobra.Command, args []string) {
 	logLevel = logLevelMap[logLevelStr]
-	logger = util.ConfigureLogger(logLevel)
+	logger = util.ConfigureLogger(logLevel, nocolorFlag)
 }
 
 func showRunCmd(cmd *cobra.Command, args []string) {
@@ -43,7 +43,7 @@ func showRunCmd(cmd *cobra.Command, args []string) {
 		logger.Exit(2)
 	}
 
-	vault, credentials, err = enpass.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel)
+	vault, credentials, err = enpass.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel, nocolorFlag)
 	if err != nil {
 		logger.Error(err)
 		logger.Exit(2)
@@ -52,7 +52,7 @@ func showRunCmd(cmd *cobra.Command, args []string) {
 	defer func() {
 		vault.Close()
 	}()
-	if err := vault.Open(credentials, logLevel); err != nil {
+	if err := vault.Open(credentials, logLevel, nocolorFlag); err != nil {
 		logger.WithError(err).Error("could not open vault")
 		logger.Exit(2)
 	}
@@ -64,5 +64,5 @@ func showRunCmd(cmd *cobra.Command, args []string) {
 		logger.Exit(2)
 	}
 
-	output.GenerateOutput(logger, "show", jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, &cards)
+	output.GenerateOutput(logger, "show", jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag, &cards)
 }

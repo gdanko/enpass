@@ -26,7 +26,7 @@ func init() {
 
 func passPreRunCmd(cmd *cobra.Command, args []string) {
 	logLevel = logLevelMap[logLevelStr]
-	logger = util.ConfigureLogger(logLevel)
+	logger = util.ConfigureLogger(logLevel, nocolorFlag)
 }
 
 func passRunCmd(cmd *cobra.Command, args []string) {
@@ -44,7 +44,7 @@ func passRunCmd(cmd *cobra.Command, args []string) {
 		logger.Exit(2)
 	}
 
-	vault, credentials, err = enpass.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel)
+	vault, credentials, err = enpass.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel, nocolorFlag)
 	if err != nil {
 		logger.Error(err)
 		logger.Exit(2)
@@ -53,7 +53,7 @@ func passRunCmd(cmd *cobra.Command, args []string) {
 	defer func() {
 		vault.Close()
 	}()
-	if err := vault.Open(credentials, logLevel); err != nil {
+	if err := vault.Open(credentials, logLevel, nocolorFlag); err != nil {
 		logger.WithError(err).Error("could not open vault")
 		logger.Exit(2)
 	}

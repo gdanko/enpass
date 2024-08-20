@@ -35,6 +35,7 @@ func GetPersistenFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(&logLevelStr, "log", defaultLogLevel, fmt.Sprintf("The log level, one of: %s", util.ReturnLogLevels(logLevelMap)))
 	cmd.PersistentFlags().BoolVarP(&nonInteractive, "nonInteractive", "n", false, "Disable prompts and fail instead.")
 	cmd.PersistentFlags().BoolVar(&caseSensitive, "sensitive", false, "Force category and title searches to be case-sensitive.")
+	cmd.PersistentFlags().BoolVar(&nocolorFlag, "nocolor", false, "Disable colorized output and logging.")
 	cmd.PersistentFlags().BoolVarP(&pinEnable, "pin", "p", false, "Enable PIN.")
 }
 

@@ -27,6 +27,7 @@ var (
 		"debug": logrus.DebugLevel,
 		"trace": logrus.TraceLevel,
 	}
+	nocolorFlag    bool
 	nonInteractive bool
 	orderbyFlag    []string
 	pinEnable      bool
