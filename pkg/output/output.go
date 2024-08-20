@@ -8,8 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const escape = "\x1b"
-
 func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag bool, cards *[]enpass.Card) {
 	if len(*cards) <= 0 {
 		fmt.Println("No cards found matching the specified criteria")

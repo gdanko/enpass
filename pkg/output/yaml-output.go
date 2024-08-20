@@ -13,6 +13,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const escape = "\x1b"
+
 var (
 	err        error
 	yamlBytes  []byte
