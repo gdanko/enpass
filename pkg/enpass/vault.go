@@ -8,11 +8,15 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	// sqlcipher is necessary for sqlite crypto support
+	"github.com/gdanko/enpass/pkg/unlock"
+	"github.com/gdanko/enpass/util"
 	sqlcipher "github.com/gdanko/gorm-sqlcipher"
+	"github.com/miquella/ask"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
@@ -32,10 +36,10 @@ var (
 )
 
 const (
-	// filename of the sqlite vault file
-	vaultFileName = "vault.enpassdb"
-	// contains info about your vault
-	vaultInfoFileName = "vault.json"
+	pinDefaultKdfIterCount = 100000
+	pinMinLength           = 8
+	vaultFileName          = "vault.enpassdb"
+	vaultInfoFileName      = "vault.json"
 )
 
 type Tabler interface {
@@ -75,6 +79,17 @@ type VaultCredentials struct {
 	KeyfilePath string
 	Password    string
 	DBKey       []byte
+}
+
+func prompt(logger *logrus.Logger, nonInteractive bool, msg string) string {
+	if !nonInteractive {
+		if response, err := ask.HiddenAsk("Enter " + msg + ": "); err != nil {
+			logger.WithError(err).Fatal("could not prompt for " + msg)
+		} else {
+			return response
+		}
+	}
+	return ""
 }
 
 func (credentials *VaultCredentials) IsComplete() bool {
@@ -139,10 +154,79 @@ func ValidateVaultPath(vaultPath string) (err error) {
 	return nil
 }
 
+func OpenVault(logger *logrus.Logger, pinEnable bool, nonInteractive bool, vaultPath string, keyFilePath string, logLevel logrus.Level) (vault *Vault, credentials *VaultCredentials, err error) {
+	vault, err = NewVault(vaultPath, logLevel)
+	if err != nil {
+		panic(err)
+	}
+
+	var store *unlock.SecureStore
+	if !pinEnable {
+		logger.Debug("PIN disabled")
+	} else {
+		logger.Debug("PIN enabled, using store")
+		store = InitializeStore(logger, vaultPath, nonInteractive)
+		logger.Debug("initialized store")
+	}
+	credentials = AssembleVaultCredentials(logger, vaultPath, keyFilePath, nonInteractive, store)
+
+	return vault, credentials, nil
+}
+
+func InitializeStore(logger *logrus.Logger, vaultPath string, nonInteractive bool) *unlock.SecureStore {
+	vaultPath, _ = filepath.EvalSymlinks(vaultPath)
+	store, err := unlock.NewSecureStore(filepath.Base(vaultPath), logger.Level)
+	if err != nil {
+		logger.WithError(err).Fatal("could not create store")
+	}
+
+	pin := os.Getenv("ENP_PIN")
+	if pin == "" {
+		pin = prompt(logger, nonInteractive, "PIN")
+	}
+	if len(pin) < pinMinLength {
+		logger.Fatal("PIN too short")
+	}
+
+	pepper := os.Getenv("ENP_PIN_PEPPER")
+
+	pinKdfIterCount, err := strconv.ParseInt(os.Getenv("ENP_PIN_ITER_COUNT"), 10, 32)
+	if err != nil {
+		pinKdfIterCount = pinDefaultKdfIterCount
+	}
+
+	if err := store.GeneratePassphrase(pin, pepper, int(pinKdfIterCount)); err != nil {
+		logger.WithError(err).Fatal("could not initialize store")
+	}
+
+	return store
+}
+
+func AssembleVaultCredentials(logger *logrus.Logger, vaultPath string, keyFilePath string, nonInteractive bool, store *unlock.SecureStore) *VaultCredentials {
+	credentials := &VaultCredentials{
+		Password:    os.Getenv("MASTERPW"),
+		KeyfilePath: keyFilePath,
+	}
+
+	if !credentials.IsComplete() && store != nil {
+		var err error
+		if credentials.DBKey, err = store.Read(); err != nil {
+			logger.WithError(err).Fatal("could not read credentials from store")
+		}
+		logger.Debug("read credentials from store")
+	}
+
+	if !credentials.IsComplete() {
+		credentials.Password = prompt(logger, nonInteractive, "vault password")
+	}
+
+	return credentials
+}
+
 // NewVault : Create new instance of vault and load vault info
 func NewVault(vaultPath string, logLevel logrus.Level) (*Vault, error) {
 	v := Vault{
-		logger:       *logrus.New(),
+		logger:       *util.ConfigureLogger(logLevel),
 		FilterFields: []string{"title", "subtitle"},
 	}
 	v.logger.SetLevel(logLevel)
