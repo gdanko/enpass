@@ -44,6 +44,7 @@ Flags:
   -k, --keyfile string         Path to your Enpass vault keyfile.
       --log string             The log level, one of: debug, error, fatal, info, panic, trace, warn (default "info")
   -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
+      --nocolor                Disable colorized output and logging.
   -n, --nonInteractive         Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
@@ -76,6 +77,7 @@ Global Flags:
   -k, --keyfile string         Path to your Enpass vault keyfile.
       --log string             The log level, one of: debug, error, fatal, info, panic, trace, warn (default "info")
   -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
+      --nocolor                Disable colorized output and logging.
   -n, --nonInteractive         Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
