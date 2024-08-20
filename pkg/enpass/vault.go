@@ -154,8 +154,8 @@ func ValidateVaultPath(vaultPath string) (err error) {
 	return nil
 }
 
-func OpenVault(logger *logrus.Logger, pinEnable bool, nonInteractive bool, vaultPath string, keyFilePath string, logLevel logrus.Level) (vault *Vault, credentials *VaultCredentials, err error) {
-	vault, err = NewVault(vaultPath, logLevel)
+func OpenVault(logger *logrus.Logger, pinEnable bool, nonInteractive bool, vaultPath string, keyFilePath string, logLevel logrus.Level, nocolorFlag bool) (vault *Vault, credentials *VaultCredentials, err error) {
+	vault, err = NewVault(vaultPath, logLevel, nocolorFlag)
 	if err != nil {
 		panic(err)
 	}
@@ -224,9 +224,9 @@ func AssembleVaultCredentials(logger *logrus.Logger, vaultPath string, keyFilePa
 }
 
 // NewVault : Create new instance of vault and load vault info
-func NewVault(vaultPath string, logLevel logrus.Level) (*Vault, error) {
+func NewVault(vaultPath string, logLevel logrus.Level, nocolorFlag bool) (*Vault, error) {
 	v := Vault{
-		logger:       *util.ConfigureLogger(logLevel),
+		logger:       *util.ConfigureLogger(logLevel, nocolorFlag),
 		FilterFields: []string{"title", "subtitle"},
 	}
 	v.logger.SetLevel(logLevel)
@@ -254,7 +254,11 @@ func NewVault(vaultPath string, logLevel logrus.Level) (*Vault, error) {
 	return &v, nil
 }
 
-func (v *Vault) openEncryptedDatabase(path string, dbKey []byte, logLevel logrus.Level) (err error) {
+func (v *Vault) openEncryptedDatabase(path string, dbKey []byte, logLevel logrus.Level, nocolorFlag bool) (err error) {
+	colorful := true
+	if nocolorFlag {
+		colorful = false
+	}
 	var levelMap = map[logrus.Level]logger.LogLevel{
 		logrus.PanicLevel: logger.Silent,
 		logrus.FatalLevel: logger.Silent,
@@ -272,7 +276,7 @@ func (v *Vault) openEncryptedDatabase(path string, dbKey []byte, logLevel logrus
 			LogLevel:                  levelMap[logLevel], // Log level
 			IgnoreRecordNotFoundError: true,               // Ignore ErrRecordNotFound error for logger
 			ParameterizedQueries:      true,               // Don't include params in the SQL log
-			Colorful:                  true,               // Disable color
+			Colorful:                  colorful,           // Disable color
 		},
 	)
 
@@ -349,14 +353,14 @@ func (v *Vault) generateAndSetDBKey(credentials *VaultCredentials) error {
 }
 
 // Open : setup a connection to the Enpass database. Call this before doing anything.
-func (v *Vault) Open(credentials *VaultCredentials, logLevel logrus.Level) error {
+func (v *Vault) Open(credentials *VaultCredentials, logLevel logrus.Level, nocolorFlag bool) error {
 	v.logger.Debug("generating database key")
 	if err := v.generateAndSetDBKey(credentials); err != nil {
 		return errors.Wrap(err, "could not generate database key")
 	}
 
 	v.logger.Debug("opening encrypted database")
-	if err := v.openEncryptedDatabase(v.databaseFilename, credentials.DBKey, logLevel); err != nil {
+	if err := v.openEncryptedDatabase(v.databaseFilename, credentials.DBKey, logLevel, nocolorFlag); err != nil {
 		return errors.Wrap(err, "could not open encrypted database")
 	}
 
