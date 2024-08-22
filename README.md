@@ -19,7 +19,8 @@ Clone the repository and from within the repository directory, type `make build`
 * Show trashed items
 * Try to auto-detect the location of the Enpass vault
 * Specify columns to sort by for list and show operations
-* Filter by multiple logins (subtitles), titles, or categories using wildcards
+* Filter by multiple logins (subtitles), titles, categories, or uuids using wildcards
+* Colorize output for JSON, YAML, list, and default views
 * And more....
 
 ## Usage
