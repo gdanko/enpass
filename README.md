@@ -45,7 +45,7 @@ Flags:
       --log string             The log level, one of: debug, error, fatal, info, panic, trace, warn (default "info")
   -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
       --nocolor                Disable colorized output and logging.
-  -n, --nonInteractive         Disable prompts and fail instead.
+  -n, --non-interactive        Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
   -t, --title stringArray      Filter based on record title. Wildcards (%) are allowed. Can be used multiple times.
@@ -78,7 +78,7 @@ Global Flags:
       --log string             The log level, one of: debug, error, fatal, info, panic, trace, warn (default "info")
   -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
       --nocolor                Disable colorized output and logging.
-  -n, --nonInteractive         Disable prompts and fail instead.
+  -n, --non-interactive        Disable prompts and fail instead.
   -p, --pin                    Enable PIN.
       --sensitive              Force category and title searches to be case-sensitive.
   -t, --title stringArray      Filter based on record title. Wildcards (%) are allowed. Can be used multiple times.
@@ -140,8 +140,5 @@ Work GitHub (gdanko-work)   https://github.workplace.com computer
 ```
 
 ## To Do
-* Allow the user to specify fields to display in the table and list views
-* Search based on login (subtitle)
-* Allow the user to store their password as an environment variable
+* Allow the user to specify fields to display
 * Make sure all the other stuff works
-
