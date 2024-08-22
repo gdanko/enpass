@@ -44,7 +44,7 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, t
 	} else if yamlFlag {
 		doYamlOutput(logger, *cards, nocolorFlag)
 	} else if listFlag {
-		doListOutput(*cards, cmdType)
+		doListOutput(*cards, cmdType, nocolorFlag)
 	} else if tableFlag {
 		doTableOutput(*cards, cmdType)
 	} else {
