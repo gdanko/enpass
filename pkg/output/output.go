@@ -48,6 +48,6 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, t
 	} else if tableFlag {
 		doTableOutput(*cards, cmdType)
 	} else {
-		doDefaultOutput(*cards, cmdType)
+		doDefaultOutput(*cards, cmdType, nocolorFlag)
 	}
 }

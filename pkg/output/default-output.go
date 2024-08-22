@@ -7,11 +7,16 @@ import (
 	"github.com/gdanko/enpass/pkg/enpass"
 )
 
-func doDefaultOutput(cards []enpass.Card, cmdType string) {
+func doDefaultOutput(cards []enpass.Card, cmdType string, noolorString bool) {
+	var title string
 	for i, cardItem := range cards {
 		if cmdType == "list" {
-			c := color.New(color.FgCyan)
-			title := c.Sprintf("[%05d] >", i+1)
+			if noolorString {
+				title = fmt.Sprintf("[%05d] >", i+1)
+			} else {
+				c := color.New(color.FgCyan)
+				title = c.Sprintf("[%05d] >", i+1)
+			}
 			fmt.Printf(
 				"%s title: %s, login: %s, category: %s\n",
 				title,
@@ -20,8 +25,12 @@ func doDefaultOutput(cards []enpass.Card, cmdType string) {
 				cardItem.Category,
 			)
 		} else if cmdType == "show" {
-			c := color.New(color.FgRed)
-			title := c.Sprintf("[%05d] >", i+1)
+			if noolorString {
+				title = fmt.Sprintf("[%05d] >", i+1)
+			} else {
+				c := color.New(color.FgRed)
+				title = c.Sprintf("[%05d] >", i+1)
+			}
 			fmt.Printf(
 				"%s title: %s, login: %s, category: %s, %s: %s\n",
 				title,
