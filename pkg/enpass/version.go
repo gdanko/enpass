@@ -7,8 +7,8 @@ import (
 
 var (
 	Major  = "0"
-	Minor  = "4"
-	Patch  = "10"
+	Minor  = "5"
+	Patch  = "0"
 	Suffix = "dev"
 )
 
