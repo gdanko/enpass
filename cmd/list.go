@@ -31,20 +31,7 @@ func listPreRunCmd(cmd *cobra.Command, args []string) {
 }
 
 func listRunCmd(cmd *cobra.Command, args []string) {
-	if vaultPath == "" {
-		vaultPath, err = enpass.FindDefaultVaultPath()
-		if err != nil {
-			logger.Error(err)
-			logger.Exit(2)
-		}
-	}
-
-	err = enpass.ValidateVaultPath(vaultPath)
-	if err != nil {
-		logger.Error(err)
-		logger.Exit(2)
-	}
-
+	vaultPath := enpass.DetermineVaultPath(logger, vaultPathFlag)
 	vault, credentials, err = enpass.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel, nocolorFlag)
 	if err != nil {
 		logger.Error(err)
