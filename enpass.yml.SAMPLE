@@ -1,21 +1,6 @@
 ---
-# Valid colors
-# black-bold
-# black
-# blue-bold
-# blue
-# cyan-bold
-# cyan
-# green-bold
-# green
-# magenta-bold
-# magenta
-# red-bold
-# red
-# white-bold
-# white
-# yellow-bold
-# yellow
+# Specify colors for JSON, YAML, and list output formats. Valid colors are:
+# black-bold, black, blue-bold, blue, cyan-bold, cyan, green-bold, green, magenta-bold, magenta, red-bold, red, white-bold, white, yellow-bold, yellow
 colors:
   alias_color: yellow-bold
   anchor_color: yellow-bold
@@ -24,4 +9,7 @@ colors:
   null_color: black-bold
   number_color: magenta-bold
   string_color: green-bold
+# Specify the output style: one of json, list, table, yaml
+# Comment this line out to use the default output style
+# output_style: json
 vault_path: ~/Documents/Enpass/Vaults/primary
