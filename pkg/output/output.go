@@ -5,20 +5,12 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/gdanko/enpass/globals"
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	// colorMap = map[string]color.Attribute{
-	// 	"AliasColor":  color.FgHiYellow,
-	// 	"AnchorColor": color.FgHiYellow,
-	// 	"BoolColor":   color.FgHiYellow,
-	// 	"KeyColor":    color.FgHiCyan,
-	// 	"NullColor":   color.FgHiBlack,
-	// 	"NumberColor": color.FgHiMagenta,
-	// 	"StringColor": color.FgHiGreen,
-	// }
 	colorMap = map[string]color.Attribute{
 		"black-bold":   color.FgHiBlack,
 		"black":        color.FgBlack,
@@ -72,13 +64,26 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, t
 
 	if jsonFlag {
 		doJsonOutput(logger, *cards, nocolorFlag)
-	} else if yamlFlag {
-		doYamlOutput(logger, *cards, nocolorFlag)
 	} else if listFlag {
 		doListOutput(*cards, cmdType, nocolorFlag)
 	} else if tableFlag {
 		doTableOutput(*cards, cmdType)
+	} else if yamlFlag {
+		doYamlOutput(logger, *cards, nocolorFlag)
 	} else {
-		doDefaultOutput(*cards, cmdType, nocolorFlag)
+		outputStyle := globals.GetConfig().OutputStyle
+		if outputStyle != "" {
+			if outputStyle == "json" {
+				doJsonOutput(logger, *cards, nocolorFlag)
+			} else if outputStyle == "list" {
+				doListOutput(*cards, cmdType, nocolorFlag)
+			} else if outputStyle == "table" {
+				doTableOutput(*cards, cmdType)
+			} else if outputStyle == "yaml" {
+				doYamlOutput(logger, *cards, nocolorFlag)
+			}
+		} else {
+			doDefaultOutput(*cards, cmdType, nocolorFlag)
+		}
 	}
 }
