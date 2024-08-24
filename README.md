@@ -21,6 +21,7 @@ Clone the repository and from within the repository directory, type `make build`
 * Specify columns to sort by for list and show operations
 * Filter by multiple logins (subtitles), titles, categories, or uuids using wildcards
 * Colorize output for JSON, YAML, list, and default views
+* Colors are defined centrally so all colorized outputs use the same color scheme
 * And more....
 
 ## Usage
