@@ -8,7 +8,9 @@ I wrote some Python scripts to manipulate my Enpass database, but I wanted to do
 * darwin or linux OS
 
 ## Installation
-Clone the repository and from within the repository directory, type `make build`. This will create a directory with the given value of `GOOS` and install the binary there. It will also create a tarball which will eventually be used for Homebrew formulae.
+* Clone the repository and from within the repository directory
+* Type `make build`. This will create a directory with the given value of `GOOS` and install the binary there. It will also create a tarball which will eventually be used for Homebrew formulae.
+* Copy <repo_root>/enpass.yml.SAMPLE to ~/.enpass.yml
 
 ## Features
 * List all entries from the database
@@ -22,7 +24,7 @@ Clone the repository and from within the repository directory, type `make build`
 * Filter by multiple logins (subtitles), titles, categories, or uuids using wildcards
 * Colorize output for JSON, YAML, list, and default views
 * Colors are defined centrally so all colorized outputs use the same color scheme
-* And more....
+* Basic options can be set in ~/.enpass.yml, please see enpass.yml.SAMPLE
 
 ## Usage
 ```
