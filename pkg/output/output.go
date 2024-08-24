@@ -4,8 +4,21 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	colorMap = map[string]color.Attribute{
+		"AliasColor":  color.FgHiYellow,
+		"AnchorColor": color.FgHiYellow,
+		"BoolColor":   color.FgHiYellow,
+		"KeyColor":    color.FgHiCyan,
+		"NullColor":   color.FgHiBlack,
+		"NumberColor": color.FgHiMagenta,
+		"StringColor": color.FgHiGreen,
+	}
 )
 
 func GenerateOutput(logger *logrus.Logger, cmdType string, jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag bool, cards *[]enpass.Card) {

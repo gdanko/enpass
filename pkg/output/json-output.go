@@ -4,14 +4,13 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
-	"github.com/gdanko/enpass/globals"
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/hokaccha/go-prettyjson"
 	"github.com/sirupsen/logrus"
 )
 
 func doJsonOutput(logger *logrus.Logger, cards []enpass.Card, nocolorFlag bool) {
-	colorMap := globals.GetColorMap()
+	colorMap := colorMap
 	disabledColor := false
 	if nocolorFlag {
 		disabledColor = true

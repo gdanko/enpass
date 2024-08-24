@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/fatih/color"
-	"github.com/gdanko/enpass/globals"
 	"github.com/gdanko/enpass/pkg/enpass"
 )
 
@@ -30,10 +29,10 @@ func doListOutput(cards []enpass.Card, cmdType string, nocolorFlag bool) {
 			}
 		} else {
 			var (
-				boolColor   = color.New(globals.GetColorMap()["BoolColor"]).SprintFunc()
-				keyColor    = color.New(globals.GetColorMap()["KeyColor"]).SprintFunc()
-				numberColor = color.New(globals.GetColorMap()["NumberColor"]).SprintFunc()
-				stringColor = color.New(globals.GetColorMap()["StringColor"]).SprintFunc()
+				boolColor   = color.New(colorMap["BoolColor"]).SprintFunc()
+				keyColor    = color.New(colorMap["KeyColor"]).SprintFunc()
+				numberColor = color.New(colorMap["NumberColor"]).SprintFunc()
+				stringColor = color.New(colorMap["StringColor"]).SprintFunc()
 			)
 			fmt.Printf("%s = %s\n", keyColor("      uuid"), stringColor(cardItem.UUID))
 			fmt.Printf("%s = %s\n", keyColor("   created"), numberColor(cardItem.CreatedAt))

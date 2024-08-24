@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/gdanko/enpass/globals"
 	"github.com/gdanko/enpass/pkg/enpass"
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/lexer"
@@ -47,37 +46,37 @@ func doYamlOutput(logger *logrus.Logger, cards []enpass.Card, nocolorFlag bool) 
 		}
 		p.Alias = func() *printer.Property {
 			return &printer.Property{
-				Prefix: format(globals.GetColorMap()["AliasColor"]),
+				Prefix: format(colorMap["AliasColor"]),
 				Suffix: format(color.Reset),
 			}
 		}
 		p.Anchor = func() *printer.Property {
 			return &printer.Property{
-				Prefix: format(globals.GetColorMap()["AnchorColor"]),
+				Prefix: format(colorMap["AnchorColor"]),
 				Suffix: format(color.Reset),
 			}
 		}
 		p.Bool = func() *printer.Property {
 			return &printer.Property{
-				Prefix: format(globals.GetColorMap()["BoolColor"]),
+				Prefix: format(colorMap["BoolColor"]),
 				Suffix: format(color.Reset),
 			}
 		}
 		p.MapKey = func() *printer.Property {
 			return &printer.Property{
-				Prefix: format(globals.GetColorMap()["KeyColor"]),
+				Prefix: format(colorMap["KeyColor"]),
 				Suffix: format(color.Reset),
 			}
 		}
 		p.Number = func() *printer.Property {
 			return &printer.Property{
-				Prefix: format(globals.GetColorMap()["NumberColor"]),
+				Prefix: format(colorMap["NumberColor"]),
 				Suffix: format(color.Reset),
 			}
 		}
 		p.String = func() *printer.Property {
 			return &printer.Property{
-				Prefix: format(globals.GetColorMap()["StringColor"]),
+				Prefix: format(colorMap["StringColor"]),
 				Suffix: format(color.Reset),
 			}
 		}
