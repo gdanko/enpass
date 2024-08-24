@@ -73,7 +73,7 @@ func init() {
 	}
 
 	// Parse the config file and set the config object in globals
-	configPath = filepath.Join(globals.GetHomeDirectory(), "enpass.yml")
+	configPath = filepath.Join(globals.GetHomeDirectory(), ".enpass.yml")
 	enpassConfig, err = util.ParseConfig(configPath)
 	if err == nil {
 		globals.SetConfig(enpassConfig)
