@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/gdanko/enpass/globals"
 	"github.com/gdanko/enpass/pkg/enpass"
 )
 
@@ -29,24 +30,24 @@ func doListOutput(cards []enpass.Card, cmdType string, nocolorFlag bool) {
 			}
 		} else {
 			var (
-				keyColor    = color.New(color.FgHiCyan).SprintFunc()
-				valueString = color.New(color.FgHiGreen).SprintFunc()
-				valueBool   = color.New(color.FgHiYellow).SprintFunc()
-				valueNumber = color.New(color.FgHiMagenta).SprintFunc()
+				boolColor   = color.New(globals.GetColorMap()["BoolColor"]).SprintFunc()
+				keyColor    = color.New(globals.GetColorMap()["KeyColor"]).SprintFunc()
+				numberColor = color.New(globals.GetColorMap()["NumberColor"]).SprintFunc()
+				stringColor = color.New(globals.GetColorMap()["StringColor"]).SprintFunc()
 			)
-			fmt.Printf("%s = %s\n", keyColor("      uuid"), valueString(cardItem.UUID))
-			fmt.Printf("%s = %s\n", keyColor("   created"), valueNumber(cardItem.CreatedAt))
-			fmt.Printf("%s = %s\n", keyColor(" card_type"), valueString(cardItem.Type))
-			fmt.Printf("%s = %s\n", keyColor("     title"), valueString(cardItem.Title))
-			fmt.Printf("%s = %s\n", keyColor("  subtitle"), valueString(cardItem.Subtitle))
+			fmt.Printf("%s = %s\n", keyColor("      uuid"), stringColor(cardItem.UUID))
+			fmt.Printf("%s = %s\n", keyColor("   created"), numberColor(cardItem.CreatedAt))
+			fmt.Printf("%s = %s\n", keyColor(" card_type"), stringColor(cardItem.Type))
+			fmt.Printf("%s = %s\n", keyColor("     title"), stringColor(cardItem.Title))
+			fmt.Printf("%s = %s\n", keyColor("  subtitle"), stringColor(cardItem.Subtitle))
 			if cardItem.Note != "" {
-				fmt.Printf("%s = %s\n", keyColor("      note"), valueString(cardItem.Note))
+				fmt.Printf("%s = %s\n", keyColor("      note"), stringColor(cardItem.Note))
 			}
-			fmt.Printf("%s = %s\n", keyColor("  category"), valueString(cardItem.Category))
-			fmt.Printf("%s = %s\n", keyColor("     label"), valueString(cardItem.Label))
-			fmt.Printf("%s = %s\n", keyColor(" last_used"), valueNumber(cardItem.LastUsed))
-			fmt.Printf("%s = %s\n", keyColor(" sensitive"), valueBool(cardItem.Sensitive))
-			fmt.Printf("%s = %s\n", keyColor("      icon"), valueString(cardItem.Icon))
+			fmt.Printf("%s = %s\n", keyColor("  category"), stringColor(cardItem.Category))
+			fmt.Printf("%s = %s\n", keyColor("     label"), stringColor(cardItem.Label))
+			fmt.Printf("%s = %s\n", keyColor(" last_used"), numberColor(cardItem.LastUsed))
+			fmt.Printf("%s = %s\n", keyColor(" sensitive"), boolColor(cardItem.Sensitive))
+			fmt.Printf("%s = %s\n", keyColor("      icon"), stringColor(cardItem.Icon))
 		}
 		if i < len(cards)-1 {
 			fmt.Println()
