@@ -10,14 +10,32 @@ import (
 )
 
 var (
+	// colorMap = map[string]color.Attribute{
+	// 	"AliasColor":  color.FgHiYellow,
+	// 	"AnchorColor": color.FgHiYellow,
+	// 	"BoolColor":   color.FgHiYellow,
+	// 	"KeyColor":    color.FgHiCyan,
+	// 	"NullColor":   color.FgHiBlack,
+	// 	"NumberColor": color.FgHiMagenta,
+	// 	"StringColor": color.FgHiGreen,
+	// }
 	colorMap = map[string]color.Attribute{
-		"AliasColor":  color.FgHiYellow,
-		"AnchorColor": color.FgHiYellow,
-		"BoolColor":   color.FgHiYellow,
-		"KeyColor":    color.FgHiCyan,
-		"NullColor":   color.FgHiBlack,
-		"NumberColor": color.FgHiMagenta,
-		"StringColor": color.FgHiGreen,
+		"black-bold":   color.FgHiBlack,
+		"black":        color.FgBlack,
+		"blue-bold":    color.FgHiBlue,
+		"blue":         color.FgBlue,
+		"cyan-bold":    color.FgHiCyan,
+		"cyan":         color.FgCyan,
+		"green-bold":   color.FgHiGreen,
+		"green":        color.FgGreen,
+		"magenta-bold": color.FgHiMagenta,
+		"magenta":      color.FgMagenta,
+		"red-bold":     color.FgHiRed,
+		"red":          color.FgRed,
+		"white-bold":   color.FgHiWhite,
+		"white":        color.FgWhite,
+		"yellow-bold":  color.FgHiYellow,
+		"yellow":       color.FgYellow,
 	}
 )
 
