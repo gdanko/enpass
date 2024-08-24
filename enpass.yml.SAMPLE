@@ -1,0 +1,27 @@
+---
+# Valid colors
+# black-bold
+# black
+# blue-bold
+# blue
+# cyan-bold
+# cyan
+# green-bold
+# green
+# magenta-bold
+# magenta
+# red-bold
+# red
+# white-bold
+# white
+# yellow-bold
+# yellow
+colors:
+  alias_color: yellow-bold
+  anchor_color: yellow-bold
+  bool_color: yellow-bold
+  key_color: cyan-bold
+  null_color: black-bold
+  number_color: magenta-bold
+  string_color: green-bold
+vault_path: ~/Documents/Enpass/Vaults/primary
