@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	// sqlcipher is necessary for sqlite crypto support
+	"github.com/gdanko/enpass/globals"
 	"github.com/gdanko/enpass/pkg/unlock"
 	"github.com/gdanko/enpass/util"
 	sqlcipher "github.com/gdanko/gorm-sqlcipher"
@@ -96,19 +95,6 @@ func (credentials *VaultCredentials) IsComplete() bool {
 	return credentials.Password != "" || credentials.DBKey != nil
 }
 
-// FileOrDirectoryExists : Determine if a file or directory exists
-func FileOrDirectoryExists(path string) (exists bool, err error) {
-	_, err = os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-
-	if os.IsNotExist(err) {
-		return false, err
-	}
-	return false, err
-}
-
 // QuoteList - quote a list for use in a database IN clause
 func QuoteList(items []string) string {
 	quoted := []string{}
@@ -118,40 +104,21 @@ func QuoteList(items []string) string {
 	return strings.Join(quoted, ",")
 }
 
-// FindDefaultVaultPath : Try to programatically determine the vault path based on the default path value
-func FindDefaultVaultPath() (vaultPath string, err error) {
-	userObj, err := user.Current()
-	if err != nil {
-		return "", fmt.Errorf("failed to determine the path of your home directory: %s", err)
+// DetermineVaultPath : Try to programatically determine the vault path based on the default path value
+func DetermineVaultPath(logger *logrus.Logger, vaultPathFlag string) (vaultPath string) {
+	vaultPathFromConfig := globals.GetConfig().VaultPath
+
+	if vaultPathFlag != "" {
+		vaultPath = util.ExpandPath(vaultPathFlag)
+	} else if vaultPathFromConfig != "" {
+		vaultPath = util.ExpandPath(vaultPathFromConfig)
+	} else {
+		homeDir := globals.GetHomeDirectory()
+		vaultPath = filepath.Join(homeDir, "Documents/Enpass/Vaults/primary")
 	}
-	vaultPath = filepath.Join(userObj.HomeDir, "Documents/Enpass/Vaults/primary")
-	return vaultPath, nil
-}
+	logger.Debugf("vault path found at %s", vaultPath)
 
-// ValidateVaultPath : Try to validate the specified vault path
-func ValidateVaultPath(vaultPath string) (err error) {
-	var exists bool
-
-	vaultFile1 := filepath.Join(vaultPath, vaultFileName)
-	vaultFile2 := filepath.Join(vaultPath, vaultInfoFileName)
-
-	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		exists, err = FileOrDirectoryExists(vaultPath)
-		if !exists && err != nil {
-			return fmt.Errorf("the vault path \"%s\" does not exist - please use the --vault flag", vaultPath)
-		}
-
-		exists, err = FileOrDirectoryExists(vaultFile1)
-		if !exists && err != nil {
-			return fmt.Errorf("the vault file \"%s\" does not exist - please use the --vault flag", vaultFile1)
-		}
-
-		exists, err = FileOrDirectoryExists(vaultFile2)
-		if !exists && err != nil {
-			return fmt.Errorf("the vault file \"%s\" does not exist - please use the --vault flag", vaultFile2)
-		}
-	}
-	return nil
+	return vaultPath
 }
 
 func OpenVault(logger *logrus.Logger, pinEnable bool, nonInteractive bool, vaultPath string, keyFilePath string, logLevel logrus.Level, nocolorFlag bool) (vault *Vault, credentials *VaultCredentials, err error) {

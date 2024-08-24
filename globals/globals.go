@@ -1,27 +1,73 @@
 package globals
 
 import (
+	"fmt"
+	"os/user"
 	"sync"
-
-	"github.com/fatih/color"
 )
+
+type Colors struct {
+	AliasColor  string `yaml:"alias_color"`
+	AnchorColor string `yaml:"anchor_color"`
+	BoolColor   string `yaml:"bool_color"`
+	KeyColor    string `yaml:"key_color"`
+	NullColor   string `yaml:"null_color"`
+	NumberColor string `yaml:"number_color"`
+	StringColor string `yaml:"string_color"`
+}
+
+type EnpassConfig struct {
+	VaultPath     string `yaml:"vault_path"`
+	VaultPassword string `yaml:"vault_password"`
+	Colors        Colors `yaml:"colors"`
+}
 
 var (
-	colorMap = map[string]color.Attribute{
-		"AliasColor":  color.FgHiYellow,
-		"AnchorColor": color.FgHiYellow,
-		"BoolColor":   color.FgHiYellow,
-		"KeyColor":    color.FgHiCyan,
-		"NullColor":   color.FgHiBlack,
-		"NumberColor": color.FgHiMagenta,
-		"StringColor": color.FgHiGreen,
+	enpassConfig = EnpassConfig{
+		VaultPath: "~/Documents/Enpass/Vaults/primary",
+		Colors: Colors{
+			AliasColor:  "yellow-bold",
+			AnchorColor: "yellow-bold",
+			BoolColor:   "yellow-bold",
+			KeyColor:    "cyan-bold",
+			NullColor:   "black-bold",
+			NumberColor: "magenta-bold",
+			StringColor: "green-bold",
+		},
 	}
-	mu sync.RWMutex
+	homeDir string
+	mu      sync.RWMutex
 )
 
-func GetColorMap() (x map[string]color.Attribute) {
+// Set and get pairs
+func SetConfig(x EnpassConfig) {
 	mu.Lock()
-	x = colorMap
+	enpassConfig = x
+	mu.Unlock()
+}
+
+func GetConfig() (x EnpassConfig) {
+	mu.Lock()
+	x = enpassConfig
+	mu.Unlock()
+	return x
+}
+
+func SetHomeDirectory() (err error) {
+	mu.Lock()
+	userObj, err := user.Current()
+	if err != nil {
+		mu.Unlock()
+		return fmt.Errorf("failed to determine the path of your home directory: %s", err)
+	}
+	homeDir = userObj.HomeDir
+	mu.Unlock()
+	return nil
+}
+
+func GetHomeDirectory() (x string) {
+	mu.Lock()
+	x = homeDir
 	mu.Unlock()
 	return x
 }
