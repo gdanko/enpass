@@ -170,8 +170,17 @@ func InitializeStore(logger *logrus.Logger, vaultPath string, nonInteractive boo
 }
 
 func AssembleVaultCredentials(logger *logrus.Logger, vaultPath string, keyFilePath string, nonInteractive bool, store *unlock.SecureStore) *VaultCredentials {
+	var (
+		vaultPassword           = os.Getenv("MASTERPW")
+		vaultPasswordFromConfig = globals.GetConfig().VaultPassword
+	)
+	if vaultPasswordFromConfig != "" {
+		fmt.Println(111)
+		vaultPassword = vaultPasswordFromConfig
+	}
+
 	credentials := &VaultCredentials{
-		Password:    os.Getenv("MASTERPW"),
+		Password:    vaultPassword,
 		KeyfilePath: keyFilePath,
 	}
 
@@ -339,11 +348,14 @@ func (v *Vault) Open(credentials *VaultCredentials, logLevel logrus.Level, nocol
 		result  Result
 		results []Result
 	)
-
 	v.db.Select("name").Table("sqlite_master").Where("type = ?", "table").Where("name = ?", "item").Find(&results)
+	if len(results) <= 0 {
+		return errors.New("could not connect to database, please check the database credentials")
+	}
+
 	for _, result = range results {
 		if result.Name != "item" {
-			return errors.New("could not connect to database")
+			return errors.New("could not connect to database, please check the database credentials")
 		}
 	}
 	return nil
