@@ -26,3 +26,4 @@ go.work.sum
 linux
 darwin
 *.tgz
+*.1
