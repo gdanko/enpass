@@ -43,7 +43,7 @@ func copyRunCmd(cmd *cobra.Command, args []string) {
 		vault.Close()
 	}()
 	if err := vault.Open(credentials, logLevel, nocolorFlag); err != nil {
-		logger.WithError(err).Error("could not open vault")
+		logger.Error(err)
 		logger.Exit(2)
 	}
 	logger.Debug("opened vault")
