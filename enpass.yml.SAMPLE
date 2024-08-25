@@ -1,4 +1,8 @@
 ---
+# Set the vault password here. DO NOT SET THIS ON A PUBLIC COMPUTER.
+# vault_password: NOWAY
+# Specify the path to your Enpass vault directory
+vault_path: ~/Documents/Enpass/Vaults/primary
 # Specify colors for JSON, YAML, and list output formats. Valid colors are:
 # black-bold, black, blue-bold, blue, cyan-bold, cyan, green-bold, green, magenta-bold, magenta, red-bold, red, white-bold, white, yellow-bold, yellow
 colors:
@@ -11,5 +15,4 @@ colors:
   string_color: green-bold
 # Specify the output style: one of json, list, table, yaml
 # Comment this line out to use the default output style
-# output_style: json
-vault_path: ~/Documents/Enpass/Vaults/primary
+output_style: json
