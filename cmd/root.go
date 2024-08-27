@@ -34,15 +34,16 @@ var (
 		"debug": logrus.DebugLevel,
 		"trace": logrus.TraceLevel,
 	}
-	nocolorFlag    bool
-	nonInteractive bool
-	orderbyFlag    []string
-	pinEnable      bool
-	recordCategory []string
-	recordLogin    []string
-	recordTitle    []string
-	recordUuid     []string
-	rootCmd        = &cobra.Command{
+	nocolorFlag      bool
+	nonInteractive   bool
+	orderbyFlag      []string
+	pinEnable        bool
+	recordCategory   []string
+	recordFieldLabel []string
+	recordLogin      []string
+	recordTitle      []string
+	recordUuid       []string
+	rootCmd          = &cobra.Command{
 		Use:   "enpass",
 		Short: "enpass is a command line interface for the Enpass password manager",
 		Long:  "enpass is a command line interface for the Enpass password manager",

@@ -30,6 +30,7 @@ func GetPersistenFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringArrayVarP(&recordTitle, "title", "t", []string{}, "Filter based on record title. Wildcards (%) are allowed. Can be used multiple times.")
 	cmd.PersistentFlags().StringArrayVarP(&recordCategory, "category", "c", []string{}, "Filter based on record category. Wildcards (%) are allowed. Can be used multiple times.")
 	cmd.PersistentFlags().StringArrayVarP(&recordLogin, "login", "l", []string{}, "Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.")
+	cmd.PersistentFlags().StringArrayVarP(&recordFieldLabel, "label", "y", []string{}, "Filter based on record field label. Can be used multiple times.")
 	cmd.PersistentFlags().StringArrayVarP(&recordUuid, "uuid", "u", []string{}, "Filter based on record uuid. Can be used multiple times.")
 	cmd.PersistentFlags().StringVarP(&keyFilePath, "keyfile", "k", "", "Path to your Enpass vault keyfile.")
 	cmd.PersistentFlags().StringVar(&logLevelStr, "log", defaultLogLevel, fmt.Sprintf("The log level, one of: %s", util.ReturnLogLevels(logLevelMap)))
