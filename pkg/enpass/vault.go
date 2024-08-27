@@ -171,12 +171,19 @@ func InitializeStore(logger *logrus.Logger, vaultPath string, nonInteractive boo
 
 func AssembleVaultCredentials(logger *logrus.Logger, vaultPath string, keyFilePath string, nonInteractive bool, store *unlock.SecureStore) *VaultCredentials {
 	var (
-		vaultPassword           = os.Getenv("MASTERPW")
+		vaultPassword           string
+		vaultPasswordFromEnv    = os.Getenv("MASTERPW")
 		vaultPasswordFromConfig = globals.GetConfig().VaultPassword
 	)
+
 	if vaultPasswordFromConfig != "" {
-		fmt.Println(111)
+		logger.Debug("found a vault password in the configuration file")
 		vaultPassword = vaultPasswordFromConfig
+	} else if vaultPasswordFromEnv != "" {
+		logger.Debug("found a vault password in the environment")
+		vaultPassword = vaultPasswordFromEnv
+	} else {
+		logger.Debug("no vault password found - will prompt")
 	}
 
 	credentials := &VaultCredentials{
@@ -370,12 +377,12 @@ func (v *Vault) Close() {
 }
 
 // GetEntries : return the cardType entries in the Enpass database filtered by option flags.
-func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
+func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
 	if v.db == nil || v.vaultInfo.VaultName == "" {
 		return nil, errors.New("vault is not initialized")
 	}
 
-	rows, err := v.executeEntryQuery(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag)
+	rows, err := v.executeEntryQuery(cardType, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
@@ -408,8 +415,8 @@ func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordL
 	return cards, nil
 }
 
-func (v *Vault) GetEntry(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string, unique bool) (*Card, error) {
-	cards, err := v.GetEntries(cardType, recordCategory, recordTitle, recordLogin, recordUuid, caseSensitive, orderbyFlag)
+func (v *Vault) GetEntry(cardType string, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel []string, caseSensitive bool, orderbyFlag []string, unique bool) (*Card, error) {
+	cards, err := v.GetEntries(cardType, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel, caseSensitive, orderbyFlag)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards")
 	}
@@ -454,7 +461,7 @@ func (v *Vault) processFilters(filterList []string, columnName string, caseSensi
 	return tx
 }
 
-func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
+func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
 	query := v.db.Select("item.uuid", "itemField.type", "item.created_at", "item.field_updated_at", "item.title", "item.subtitle", "item.note", "item.trashed", "item.deleted", "item.category", "itemfield.label", "itemfield.value AS raw_value", "item.key", "item.last_used", "itemfield.sensitive", "item.icon").Table("item").Joins("INNER JOIN itemfield ON uuid = item_uuid")
 
 	query.Where("item.deleted = ?", 0)
@@ -464,6 +471,7 @@ func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, 
 	query.Where(v.processFilters(recordTitle, "title", caseSensitive))
 	query.Where(v.processFilters(recordLogin, "subtitle", caseSensitive))
 	query.Where(v.processFilters(recordUuid, "uuid", caseSensitive))
+	query.Where(v.processFilters(recordFieldLabel, "label", caseSensitive))
 
 	if len(orderbyFlag) > 0 {
 		badFields := funk.SubtractString(orderbyFlag, validFields)
