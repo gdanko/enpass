@@ -23,7 +23,6 @@ go.work.sum
 
 # Packeage-specific files
 .vscode
-linux
-darwin
+bin
 *.tgz
 *.1
