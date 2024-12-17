@@ -2,7 +2,10 @@
 # Set the vault password here. DO NOT SET THIS ON A PUBLIC COMPUTER.
 # vault_password: NOWAY
 # Specify the path to your Enpass vault directory
-vault_path: ~/Documents/Enpass/Vaults/primary
+# Linux
+# vault_path: ~/Documents/Enpass/Vaults/primary
+# Darwin Sonoma
+~/Library/Containers/in.sinew.Enpass-Desktop/Data/Documents/Vaults/primary
 # Specify colors for JSON, YAML, and list output formats. Valid colors are:
 # black-bold, black, blue-bold, blue, cyan-bold, cyan, green-bold, green, magenta-bold, magenta, red-bold, red, white-bold, white, yellow-bold, yellow
 colors:
