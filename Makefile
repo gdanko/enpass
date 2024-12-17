@@ -20,23 +20,21 @@ build: guard-ENPASS_VERSION mod-tidy clean
 	@echo "Building enpass"
 	@echo "=================================================\n"
 
-	@if [ ! -d "${GOOS}" ]; then \
-		mkdir "${GOOS}"; \
+	@if [ ! -d "bin" ]; then \
+		mkdir "bin"; \
 	fi
-	GOOS=${GOOS} GOARCH=${GOARCH} go build -o "${GOOS}/enpass"
+	GOOS=${GOOS} GOARCH=${GOARCH} go build -o "bin/enpass"
 	sleep 2
-	tar -C "${GOOS}" -czvf "enpass_${ENPASS_VERSION}_${GOOS}_${GOARCH}.tgz" enpass; \
+	tar -czvf "enpass_${ENPASS_VERSION}_${GOOS}_${GOARCH}.tgz" bin; \
 
 .PHONY: clean
 clean:
 	@echo "================================================="
 	@echo "Cleaning enpass"
 	@echo "=================================================\n"
-	@for OS in darwin linux; do \
-		if [ -f $${OS}/enpass ]; then \
-			rm -f $${OS}/enpass; \
-		fi; \
-	done
+	@if [ -f bin/enpass ]; then \
+		rm -f bin/enpass; \
+	fi; \
 
 .PHONY: clean-all
 clean-all: clean
