@@ -62,7 +62,7 @@ func Execute() error {
 
 func init() {
 	GetPersistenFlags(rootCmd)
-
+	rootCmd.MarkPersistentFlagRequired("title")
 	logLevel = logLevelMap[logLevelStr]
 	logger = util.ConfigureLogger(logLevel, nocolorFlag)
 
