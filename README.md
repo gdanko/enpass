@@ -14,7 +14,7 @@ I wrote some Python scripts to manipulate my Enpass database, but I wanted to do
 
 ## Installation (Homebrew)
 * `brew tap gdanko/homebrew`
-* `brew install gdanko/gdanko/enpass`
+* `brew install gdanko/homebrew/enpass`
 
 ## Features
 * List all entries from the database
