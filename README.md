@@ -9,8 +9,12 @@ I wrote some Python scripts to manipulate my Enpass database, but I wanted to do
 
 ## Installation
 * Clone the repository and from within the repository directory
-* Type `make build`. This will create a directory with the given value of `GOOS` and install the binary there. It will also create a tarball which will eventually be used for Homebrew formulae.
+* Type `make build`. This will create a bin directory and install the binary there. It will also create a tarball which will eventually be used for Homebrew formulae.
 * Copy <repo_root>/enpass.yml.SAMPLE to ~/.enpass.yml
+
+## Installation (Homebrew)
+* `brew tap gdanko/gdanko`
+* `brew install gdanko/gdanko/enpass`
 
 ## Features
 * List all entries from the database
