@@ -13,7 +13,7 @@ I wrote some Python scripts to manipulate my Enpass database, but I wanted to do
 * Copy <repo_root>/enpass.yml.SAMPLE to ~/.enpass.yml
 
 ## Installation (Homebrew)
-* `brew tap gdanko/gdanko`
+* `brew tap gdanko/homebrew`
 * `brew install gdanko/gdanko/enpass`
 
 ## Features
