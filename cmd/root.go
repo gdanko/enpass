@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/gdanko/enpass/globals"
@@ -83,5 +84,14 @@ func init() {
 		} else if strings.Contains(err.Error(), "failed to read") || strings.Contains(err.Error(), "failed to parse") {
 			logger.Warningf("%s, using the default configuration", err)
 		}
+
+		// Need to set default vault path for different OSes - there should be a better way to do this
+		enpassConfig = globals.GetConfig()
+		if runtime.GOOS == "darwin" {
+			enpassConfig.VaultPath = "~/Library/Containers/in.sinew.Enpass-Desktop/Data/Documents/Vaults/find "
+		} else if runtime.GOOS == "linux" {
+			enpassConfig.VaultPath = "~/Documents/Enpass/Vaults/primary"
+		}
+		globals.SetConfig(enpassConfig)
 	}
 }
