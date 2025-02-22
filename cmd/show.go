@@ -51,5 +51,5 @@ func showRunCmd(cmd *cobra.Command, args []string) {
 		logger.Exit(2)
 	}
 
-	output.GenerateOutput(logger, "show", jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag, &cards)
+	output.GenerateOutput(logger, "show", listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag, &cards)
 }

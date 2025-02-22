@@ -53,5 +53,5 @@ func listRunCmd(cmd *cobra.Command, args []string) {
 		logger.Exit(2)
 	}
 
-	output.GenerateOutput(logger, "list", jsonFlag, listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag, &cards)
+	output.GenerateOutput(logger, "list", listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag, &cards)
 }

@@ -18,7 +18,6 @@ func GetShowFlags(cmd *cobra.Command) {
 func getListShowFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&trashedFlag, "trashed", false, "Show trashed items.")
 	cmd.Flags().StringArrayVarP(&orderbyFlag, "orderby", "o", []string{"title"}, "Specify fields to sort by. Can be used multiple times.")
-	cmd.Flags().BoolVar(&jsonFlag, "json", false, "Output the data as JSON.")
 	cmd.Flags().BoolVar(&listFlag, "list", false, "Output the data as list, similar to SQLite line mode.")
 	cmd.Flags().BoolVar(&yamlFlag, "yaml", false, "Output the data as YAML.")
 	cmd.Flags().BoolVar(&tableFlag, "table", false, "Output the data as a table.")

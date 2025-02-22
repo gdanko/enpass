@@ -22,7 +22,6 @@ var (
 	enpassConfig     globals.EnpassConfig
 	err              error
 	keyFilePath      string
-	jsonFlag         bool
 	listFlag         bool
 	logLevel         logrus.Level
 	logLevelStr      string
