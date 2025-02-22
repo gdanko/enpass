@@ -146,6 +146,16 @@ GitHub                      gdanko@example.com           login
 GitHub                      https://github.com           computer
 Work GitHub (gdanko-work)   https://github.workplace.com computer
 ```
+## Troubleshooting
+You need to get the value of the hex-encoded key
+* In `openEncryptedDatabase()` you need to add a line to print the key to the console, `fmt.Println(hex.EncodeToString(dbKey)[:masterKeyLength])`
+* Once you have the key, do the following
+    * Open the database file using DB Browser for SQLite
+    * You will see a `SQLCipher encryption` dialog
+        * Check `SQLCipher3 Defaults`
+        * In the `Password` field, put `x'<encoded_hext_string>'`
+        * Click `OK`
+* You can now query the database to look around.
 
 ## To Do
 * Allow the user to specify fields to display
