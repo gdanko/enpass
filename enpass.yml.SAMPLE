@@ -5,7 +5,7 @@
 # Linux
 # vault_path: "~/Documents/Enpass/Vaults/primary"
 # Darwin Sequoia
-# vault_path: "~/Library/Containers/in.sinew.Enpass-Desktop/Data/Documents/Vaults/find "
+# valut_path" "~/Library/Containers/in.sinew.Enpass-Desktop/Data/Documents/Vaults/primary"
 # Specify colors for JSON, YAML, and list output formats. Valid colors are:
 # black-bold, black, blue-bold, blue, cyan-bold, cyan, green-bold, green, magenta-bold, magenta, red-bold, red, white-bold, white, yellow-bold, yellow
 colors:
