@@ -7,7 +7,6 @@ require (
 	github.com/fatih/color v1.17.0
 	github.com/gdanko/gorm-sqlcipher v0.0.0-20240817163813-e8f9693cc5d6
 	github.com/goccy/go-yaml v1.12.0
-	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f
 	github.com/markkurossi/tabulate v0.0.0-20230223130100-d4965869b123
 	github.com/mattn/go-colorable v0.1.13
 	github.com/miquella/ask v1.0.0
