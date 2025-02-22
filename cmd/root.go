@@ -18,7 +18,8 @@ var (
 	clipboardPrimary bool
 	configPath       string
 	credentials      *enpass.VaultCredentials
-	defaultLogLevel  = "info"
+	defaultLabels    []string = []string{"Password"}
+	defaultLogLevel           = "info"
 	enpassConfig     globals.EnpassConfig
 	err              error
 	keyFilePath      string
