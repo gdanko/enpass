@@ -5,8 +5,8 @@
 # Linux
 # vault_path: "~/Documents/Enpass/Vaults/primary"
 # Darwin Sequoia
-# valut_path" "~/Library/Containers/in.sinew.Enpass-Desktop/Data/Documents/Vaults/primary"
-# Specify colors for JSON, YAML, and list output formats. Valid colors are:
+# vault_path" "~/Library/Containers/in.sinew.Enpass-Desktop/Data/Documents/Vaults/primary"
+# Specify colors for YAML, and list output formats. Valid colors are:
 # black-bold, black, blue-bold, blue, cyan-bold, cyan, green-bold, green, magenta-bold, magenta, red-bold, red, white-bold, white, yellow-bold, yellow
 colors:
   alias_color: yellow-bold
@@ -16,6 +16,14 @@ colors:
   null_color: black-bold
   number_color: magenta-bold
   string_color: green-bold
-# Specify the output style: one of json, list, table, yaml
+# Specify the output style: one of list, table, yaml
 # Comment this line out to use the default output style
-output_style: json
+output_style: list
+
+# Here you can overwrite the default labels to query for
+default_labels:
+  - Password
+
+# Sort the output by one of more fields
+orderby:
+  - title
