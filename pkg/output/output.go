@@ -31,7 +31,7 @@ var (
 	}
 )
 
-func GenerateOutput(logger *logrus.Logger, cmdType string, listFlag, tableFlag, trashedFlag, yamlFlag, nocolorFlag bool, cards *[]enpass.Card) {
+func GenerateOutput(logger *logrus.Logger, cmdType string, flagList, flagTable, flagTrashed, flagYaml, flagNoColor bool, cards *[]enpass.Card) {
 	if len(*cards) <= 0 {
 		fmt.Println("No records found matching the specified criteria")
 		os.Exit(0)
@@ -41,7 +41,7 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, listFlag, tableFlag, 
 	cardsPruned := []enpass.Card{}
 	for _, cardItem := range *cards {
 		if cardItem.IsTrashed() {
-			if trashedFlag {
+			if flagTrashed {
 				cardsPruned = append(cardsPruned, cardItem)
 			}
 		} else {
@@ -62,23 +62,23 @@ func GenerateOutput(logger *logrus.Logger, cmdType string, listFlag, tableFlag, 
 
 	cards = &cardsPruned
 
-	if listFlag {
-		doListOutput(*cards, cmdType, nocolorFlag)
-	} else if tableFlag {
+	if flagList {
+		doListOutput(*cards, cmdType, flagNoColor)
+	} else if flagTable {
 		doTableOutput(*cards, cmdType)
-	} else if yamlFlag {
-		doYamlOutput(logger, *cards, nocolorFlag)
+	} else if flagYaml {
+		doYamlOutput(logger, *cards, flagNoColor)
 	} else {
 		outputStyle := globals.GetConfig().OutputStyle
 		switch outputStyle {
 		case "list":
-			doListOutput(*cards, cmdType, nocolorFlag)
+			doListOutput(*cards, cmdType, flagNoColor)
 		case "table":
 			doTableOutput(*cards, cmdType)
 		case "yaml":
-			doYamlOutput(logger, *cards, nocolorFlag)
+			doYamlOutput(logger, *cards, flagNoColor)
 		default:
-			doDefaultOutput(*cards, cmdType, nocolorFlag)
+			doDefaultOutput(*cards, cmdType, flagNoColor)
 		}
 	}
 }
