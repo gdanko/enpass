@@ -21,8 +21,8 @@ const (
 )
 
 // generateMasterPassword : generates the master password to decrypt the vault database
-func (v *Vault) generateMasterPassword(password []byte, keyfilePath string) ([]byte, error) {
-	if keyfilePath == "" {
+func (v *Vault) generateMasterPassword(password []byte, flagKeyFilePath string) ([]byte, error) {
+	if flagKeyFilePath == "" {
 		v.logger.Debug("not using keyfile")
 
 		if password == nil {
@@ -34,7 +34,7 @@ func (v *Vault) generateMasterPassword(password []byte, keyfilePath string) ([]b
 
 	v.logger.Debug("using keyfile")
 
-	keyfileBytes, err := loadKeyFilePassword(keyfilePath)
+	keyfileBytes, err := loadKeyFilePassword(flagKeyFilePath)
 	if err != nil {
 		return nil, err
 	}
