@@ -58,27 +58,50 @@ import (
 2020/12/08 08:59:36 > extra
 */
 
-type Card struct {
+type RawCard struct {
 	// plaintext
-	UUID           string `json:"uuid,omitempty" yaml:"uuid,omitempty"`
-	CreatedAt      int64  `json:"created,omitempty" yaml:"created,omitempty"`
-	Type           string `json:"card_type,omitempty" yaml:"card_type,omitempty"`
-	UpdatedAt      int64  `json:"updated,omitempty" yaml:"updated,omitempty"`
-	Title          string `json:"title,omitempty" yaml:"title,omitempty"`
-	Subtitle       string `json:"subtitle,omitempty" yaml:"subtitle,omitempty"`
-	Note           string `json:"note,omitempty" yaml:"note,omitempty"`
-	Trashed        int64  `json:"trashed,omitempty" yaml:"trashed,omitempty"`
-	Deleted        int64  `json:"deleted,omitempty" yaml:"deleted,omitempty"`
-	Category       string `json:"category,omitempty" yaml:"category,omitempty"`
-	Label          string `json:"label,omitempty" yaml:"label,omitempty"`
-	LastUsed       int64  `json:"last_used,omitempty" yaml:"last_used,omitempty"`
-	Sensitive      bool   `json:"sensitive,omitempty" yaml:"sensitive,omitempty"`
-	Icon           string `json:"icon,omitempty" yaml:"icon,omitempty"`
-	DecryptedValue string `json:"decrypted_value,omitempty" yaml:"decrypted_value,omitempty"`
+	UUID           string `yaml:"uuid,omitempty"`
+	Created        int64  `yaml:"created,omitempty"`
+	Type           string `yaml:"card_type,omitempty"`
+	Updated        int64  `yaml:"updated,omitempty"`
+	Title          string `yaml:"title,omitempty"`
+	Subtitle       string `yaml:"subtitle,omitempty"`
+	Note           string `yaml:"note,omitempty"`
+	Trashed        int64  `yaml:"trashed,omitempty"`
+	Deleted        int64  `yaml:"deleted,omitempty"`
+	Category       string `yaml:"category,omitempty"`
+	Label          string `yaml:"label,omitempty"`
+	LastUsed       int64  `yaml:"last_used,omitempty"`
+	Sensitive      bool   `yaml:"sensitive,omitempty"`
+	Icon           string `yaml:"icon,omitempty"`
+	DecryptedValue string `yaml:"decrypted_value,omitempty"`
 
 	// encrypted
-	RawValue string `json:"raw_value,omitempty" yaml:"raw_value,omitempty"`
-	Key      []byte `json:"key,omitempty" yaml:"key,omitempty"`
+	RawValue string `yaml:"raw_value,omitempty"`
+	Key      []byte `yaml:"key,omitempty"`
+}
+
+type Card struct {
+	// plaintext
+	UUID           string `yaml:"uuid,omitempty"`
+	Created        string `yaml:"created,omitempty"`
+	Type           string `yaml:"card_type,omitempty"`
+	Updated        string `yaml:"updated,omitempty"`
+	Title          string `yaml:"title,omitempty"`
+	Subtitle       string `yaml:"subtitle,omitempty"`
+	Note           string `yaml:"note,omitempty"`
+	Trashed        int64  `yaml:"trashed,omitempty"`
+	Deleted        int64  `yaml:"deleted,omitempty"`
+	Category       string `yaml:"category,omitempty"`
+	Label          string `yaml:"label,omitempty"`
+	LastUsed       string `yaml:"last_used,omitempty"`
+	Sensitive      bool   `yaml:"sensitive,omitempty"`
+	Icon           string `yaml:"icon,omitempty"`
+	DecryptedValue string `yaml:"decrypted_value,omitempty"`
+
+	// encrypted
+	RawValue string `yaml:"raw_value,omitempty"`
+	Key      []byte `yaml:"key,omitempty"`
 }
 
 func (c *Card) IsTrashed() bool {
