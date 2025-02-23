@@ -13,20 +13,32 @@ import (
 )
 
 var (
-	cardType         string
-	caseSensitive    bool
-	clipboardPrimary bool
-	configPath       string
-	credentials      *enpass.VaultCredentials
-	defaultLabels    []string = []string{"Password"}
-	defaultLogLevel           = "info"
-	enpassConfig     globals.EnpassConfig
-	err              error
-	keyFilePath      string
-	listFlag         bool
-	logLevel         logrus.Level
-	logLevelStr      string
-	logLevelMap      = map[string]logrus.Level{
+	flagCardType         string
+	flagCaseSensitive    bool
+	flagClipboardPrimary bool
+	configPath           string
+	credentials          *enpass.VaultCredentials
+	defaultLogLevel      = "info"
+	enpassConfig         globals.EnpassConfig
+	err                  error
+	flagEnablePin        bool
+	flagKeyFilePath      string
+	flagLabel            []string
+	flagList             bool
+	flagNoColor          bool
+	flagNonInteractive   bool
+	flagOrderBy          []string
+	flagRecordCategory   []string
+	flagRecordLogin      []string
+	flagRecordTitle      []string
+	flagRecordUuid       []string
+	flagTable            bool
+	flagTrashed          bool
+	flagVaultPath        string
+	flagYaml             bool
+	logLevel             logrus.Level
+	logLevelStr          string
+	logLevelMap          = map[string]logrus.Level{
 		"panic": logrus.PanicLevel,
 		"fatal": logrus.FatalLevel,
 		"error": logrus.ErrorLevel,
@@ -35,26 +47,15 @@ var (
 		"debug": logrus.DebugLevel,
 		"trace": logrus.TraceLevel,
 	}
-	nocolorFlag      bool
-	nonInteractive   bool
-	orderbyFlag      []string
-	pinEnable        bool
-	recordCategory   []string
-	recordFieldLabel []string
-	recordLogin      []string
-	recordTitle      []string
-	recordUuid       []string
-	rootCmd          = &cobra.Command{
+	rootCmd = &cobra.Command{
 		Use:   "enpass",
 		Short: "enpass is a command line interface for the Enpass password manager",
 		Long:  "enpass is a command line interface for the Enpass password manager",
 	}
-	tableFlag     bool
-	trashedFlag   bool
-	vault         *enpass.Vault
-	vaultPathFlag string
-	versionFull   bool
-	yamlFlag      bool
+	validOrderBy []string = []string{"card_type", "category", "created", "label", "last_used", "subtitle", "title", "updated"}
+	vault        *enpass.Vault
+
+	versionFull bool
 )
 
 func Execute() error {
@@ -64,7 +65,7 @@ func Execute() error {
 func init() {
 	GetPersistenFlags(rootCmd)
 	logLevel = logLevelMap[logLevelStr]
-	logger = util.ConfigureLogger(logLevel, nocolorFlag)
+	logger = util.ConfigureLogger(logLevel, flagNoColor)
 
 	// Set the home directory in globals
 	err = globals.SetHomeDirectory()

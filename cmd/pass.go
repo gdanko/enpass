@@ -26,12 +26,12 @@ func init() {
 
 func passPreRunCmd(cmd *cobra.Command, args []string) {
 	logLevel = logLevelMap[logLevelStr]
-	logger = util.ConfigureLogger(logLevel, nocolorFlag)
+	logger = util.ConfigureLogger(logLevel, flagNoColor)
 }
 
 func passRunCmd(cmd *cobra.Command, args []string) {
-	vaultPath := enpass.DetermineVaultPath(logger, vaultPathFlag)
-	vault, credentials, err = enpass.OpenVault(logger, pinEnable, nonInteractive, vaultPath, keyFilePath, logLevel, nocolorFlag)
+	vaultPath := enpass.DetermineVaultPath(logger, flagVaultPath)
+	vault, credentials, err = enpass.OpenVault(logger, flagEnablePin, flagNonInteractive, vaultPath, flagKeyFilePath, logLevel, flagNoColor)
 	if err != nil {
 		logger.Error(err)
 		logger.Exit(2)
@@ -40,13 +40,13 @@ func passRunCmd(cmd *cobra.Command, args []string) {
 	defer func() {
 		vault.Close()
 	}()
-	if err := vault.Open(credentials, logLevel, nocolorFlag); err != nil {
+	if err := vault.Open(credentials, logLevel, flagNoColor); err != nil {
 		logger.Error(err)
 		logger.Exit(2)
 	}
 	logger.Debug("opened vault")
 
-	card, err := vault.GetEntry(cardType, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel, caseSensitive, orderbyFlag, true)
+	card, err := vault.GetEntry(flagCardType, flagRecordCategory, flagRecordTitle, flagRecordLogin, flagRecordUuid, flagLabel, flagCaseSensitive, flagOrderBy, validOrderBy, true)
 	if err != nil {
 		logger.Error(err)
 		logger.Exit(2)
