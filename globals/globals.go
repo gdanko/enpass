@@ -17,10 +17,12 @@ type Colors struct {
 }
 
 type EnpassConfig struct {
-	Colors        Colors `yaml:"colors"`
-	OutputStyle   string `yaml:"output_style"`
-	VaultPassword string `yaml:"vault_password"`
-	VaultPath     string `yaml:"vault_path"`
+	Colors        Colors   `yaml:"colors"`
+	DefaultLabels []string `yaml:"default_labels"`
+	OrderBy       []string `yaml:"orderby"`
+	OutputStyle   string   `yaml:"output_style"`
+	VaultPassword string   `yaml:"vault_password"`
+	VaultPath     string   `yaml:"vault_path"`
 }
 
 var (
