@@ -21,17 +21,33 @@ I wrote some Python scripts to manipulate my Enpass database, but I wanted to do
 * List all entries from the database and show the passwords
 * Display the password for a given item to STDOUT
 * Copy the password for a given item to the clipboard
-* Output in JSON, YAML, list, or table format
+* Output in YAML, list, or table format
 * Show trashed items
 * Try to auto-detect the location of the Enpass vault
 * Specify columns to sort by for list and show operations
 * Filter by multiple logins (subtitles), titles, categories, or uuids using wildcards
-* Colorize output for JSON, YAML, list, and default views
+* Colorize output for YAML, list, and default views
 * Colors are defined centrally so all colorized outputs use the same color scheme
 * Basic options can be set in ~/.enpass.yml, please see enpass.yml.SAMPLE
 
+## The `~/.enpass.yml` file
+This file currently supports the following options
+* `vault_path` - The absolute path to your vault file
+* `colors` - Configure colors for output
+    * `alias_color`
+    * `anchor_color`
+    * `bool_color`
+    * `key_color`
+    * `null_color`
+    * `number_color`
+    * `string_color`
+* `output_style` - One of `list`, `table`, or `yaml`
+* `default_labels` - A YAML array of labels, you will need to parse your database file to find all available values.
+* `orderby` - A YAML array of fields to sort the output by.
+
 ## Usage
 ```
+$ enpass
 enpass is a command line interface for the Enpass password manager
 
 Usage:
@@ -50,6 +66,7 @@ Flags:
   -c, --category stringArray   Filter based on record category. Wildcards (%) are allowed. Can be used multiple times.
   -h, --help                   help for enpass
   -k, --keyfile string         Path to your Enpass vault keyfile.
+  -y, --label stringArray      Filter based on record field label. Can be used multiple times
       --log string             The log level, one of: debug, error, fatal, info, panic, trace, warn (default "info")
   -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
       --nocolor                Disable colorized output and logging.
@@ -66,6 +83,7 @@ Use "enpass [command] --help" for more information about a command.
 
 ## List Usage
 ```
+$ enpass list --help
 List vault entries without displaying the password
 
 Usage:
@@ -73,9 +91,8 @@ Usage:
 
 Flags:
   -h, --help                  help for list
-      --json                  Output the data as JSON.
       --list                  Output the data as list, similar to SQLite line mode.
-  -o, --orderby stringArray   Specify fields to sort by. Can be used multiple times. (default [title])
+  -o, --orderby stringArray   Specify fields to sort by. Can be used multiple times. Valid: card_type, category, created, label, last_used, subtitle, title, updated
       --table                 Output the data as a table.
       --trashed               Show trashed items.
       --yaml                  Output the data as YAML.
@@ -83,6 +100,7 @@ Flags:
 Global Flags:
   -c, --category stringArray   Filter based on record category. Wildcards (%) are allowed. Can be used multiple times.
   -k, --keyfile string         Path to your Enpass vault keyfile.
+  -y, --label stringArray      Filter based on record field label. Can be used multiple times
       --log string             The log level, one of: debug, error, fatal, info, panic, trace, warn (default "info")
   -l, --login stringArray      Filter based on record login. Wildcards (%) are allowed. Can be used multiple times.
       --nocolor                Disable colorized output and logging.
@@ -96,25 +114,20 @@ Global Flags:
 ```
 
 ## Examples
-List the `Discord` record and output to JSON format
+List the `Discord` record and output to YAML format
 ```
-$ enpass list --title Discord --json
+$ enpass list --title Discord --yaml
 Enter vault password:
-[
-    {
-        "uuid": "xxxxxxx",
-        "created": 1722787097,
-        "card_type": "password",
-        "updated": 1722787097,
-        "title": "Discord",
-        "subtitle": "user@example.com",
-        "category": "login",
-        "label": "Password",
-        "sensitive": true,
-        "icon": "{\"fav\":\"discord.com\",\"image\":{\"file\":\"misc/login\"},\"type\":1,\"uuid\":\"\"}",
-        "raw_value": "xxxxxxx"
-    }
-]
+- uuid: xxxxxxx
+  created: 1710107066
+  card_type: password
+  title: Discord
+  subtitle: user@example.com
+  category: login
+  label: Password
+  last_used: 1730565183
+  sensitive: true
+  icon: "{\"fav\":\"discord.com\",\"image\":{\"file\":\"misc/login\"},\"type\":1,\"uuid\":\"\"}"
 ```
 
 Copy the `Foo` record's password to the clipboard
@@ -146,6 +159,7 @@ GitHub                      gdanko@example.com           login
 GitHub                      https://github.com           computer
 Work GitHub (gdanko-work)   https://github.workplace.com computer
 ```
+
 ## Troubleshooting
 You need to get the value of the hex-encoded key
 * In `openEncryptedDatabase()` you need to add a line to print the key to the console, `fmt.Println(hex.EncodeToString(dbKey)[:masterKeyLength])`
@@ -155,7 +169,7 @@ You need to get the value of the hex-encoded key
         * Check `SQLCipher3 Defaults`
         * In the `Password` field, put `x'<encoded_hext_string>'`
         * Click `OK`
-* You can now query the database to look around.
+* You can now query the database to look
 
 ## To Do
 * Allow the user to specify fields to display
