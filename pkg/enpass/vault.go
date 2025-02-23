@@ -24,14 +24,8 @@ import (
 )
 
 var (
-	rows        []Card
-	tableName   = "item"
-	validFields = []string{
-		"category",
-		"login",
-		"title",
-		"uuid",
-	}
+	rows      []RawCard
+	tableName = "item"
 )
 
 const (
@@ -75,13 +69,13 @@ type Vault struct {
 }
 
 type VaultCredentials struct {
-	KeyfilePath string
-	Password    string
-	DBKey       []byte
+	flagKeyFilePath string
+	Password        string
+	DBKey           []byte
 }
 
-func prompt(logger *logrus.Logger, nonInteractive bool, msg string) string {
-	if !nonInteractive {
+func prompt(logger *logrus.Logger, flagNonInteractive bool, msg string) string {
+	if !flagNonInteractive {
 		if response, err := ask.HiddenAsk("Enter " + msg + ": "); err != nil {
 			logger.WithError(err).Fatal("could not prompt for " + msg)
 		} else {
@@ -105,11 +99,11 @@ func QuoteList(items []string) string {
 }
 
 // DetermineVaultPath : Try to programatically determine the vault path based on the default path value
-func DetermineVaultPath(logger *logrus.Logger, vaultPathFlag string) (vaultPath string) {
+func DetermineVaultPath(logger *logrus.Logger, flagVaultPath string) (vaultPath string) {
 	vaultPathFromConfig := globals.GetConfig().VaultPath
 
-	if vaultPathFlag != "" {
-		vaultPath = util.ExpandPath(vaultPathFlag)
+	if flagVaultPath != "" {
+		vaultPath = util.ExpandPath(flagVaultPath)
 	} else if vaultPathFromConfig != "" {
 		vaultPath = util.ExpandPath(vaultPathFromConfig)
 	} else {
@@ -121,26 +115,26 @@ func DetermineVaultPath(logger *logrus.Logger, vaultPathFlag string) (vaultPath 
 	return vaultPath
 }
 
-func OpenVault(logger *logrus.Logger, pinEnable bool, nonInteractive bool, vaultPath string, keyFilePath string, logLevel logrus.Level, nocolorFlag bool) (vault *Vault, credentials *VaultCredentials, err error) {
-	vault, err = NewVault(vaultPath, logLevel, nocolorFlag)
+func OpenVault(logger *logrus.Logger, flagEnablePin bool, flagNonInteractive bool, vaultPath string, flagKeyFilePath string, logLevel logrus.Level, flagNoColor bool) (vault *Vault, credentials *VaultCredentials, err error) {
+	vault, err = NewVault(vaultPath, logLevel, flagNoColor)
 	if err != nil {
 		panic(err)
 	}
 
 	var store *unlock.SecureStore
-	if !pinEnable {
+	if !flagEnablePin {
 		logger.Debug("PIN disabled")
 	} else {
 		logger.Debug("PIN enabled, using store")
-		store = InitializeStore(logger, vaultPath, nonInteractive)
+		store = InitializeStore(logger, vaultPath, flagNonInteractive)
 		logger.Debug("initialized store")
 	}
-	credentials = AssembleVaultCredentials(logger, vaultPath, keyFilePath, nonInteractive, store)
+	credentials = AssembleVaultCredentials(logger, vaultPath, flagKeyFilePath, flagNonInteractive, store)
 
 	return vault, credentials, nil
 }
 
-func InitializeStore(logger *logrus.Logger, vaultPath string, nonInteractive bool) *unlock.SecureStore {
+func InitializeStore(logger *logrus.Logger, vaultPath string, flagNonInteractive bool) *unlock.SecureStore {
 	vaultPath, _ = filepath.EvalSymlinks(vaultPath)
 	store, err := unlock.NewSecureStore(filepath.Base(vaultPath), logger.Level)
 	if err != nil {
@@ -149,7 +143,7 @@ func InitializeStore(logger *logrus.Logger, vaultPath string, nonInteractive boo
 
 	pin := os.Getenv("ENP_PIN")
 	if pin == "" {
-		pin = prompt(logger, nonInteractive, "PIN")
+		pin = prompt(logger, flagNonInteractive, "PIN")
 	}
 	if len(pin) < pinMinLength {
 		logger.Fatal("PIN too short")
@@ -169,7 +163,7 @@ func InitializeStore(logger *logrus.Logger, vaultPath string, nonInteractive boo
 	return store
 }
 
-func AssembleVaultCredentials(logger *logrus.Logger, vaultPath string, keyFilePath string, nonInteractive bool, store *unlock.SecureStore) *VaultCredentials {
+func AssembleVaultCredentials(logger *logrus.Logger, vaultPath string, flagKeyFilePath string, flagNonInteractive bool, store *unlock.SecureStore) *VaultCredentials {
 	var (
 		vaultPassword           string
 		vaultPasswordFromEnv    = os.Getenv("MASTERPW")
@@ -187,8 +181,8 @@ func AssembleVaultCredentials(logger *logrus.Logger, vaultPath string, keyFilePa
 	}
 
 	credentials := &VaultCredentials{
-		Password:    vaultPassword,
-		KeyfilePath: keyFilePath,
+		Password:        vaultPassword,
+		flagKeyFilePath: flagKeyFilePath,
 	}
 
 	if !credentials.IsComplete() && store != nil {
@@ -200,16 +194,16 @@ func AssembleVaultCredentials(logger *logrus.Logger, vaultPath string, keyFilePa
 	}
 
 	if !credentials.IsComplete() {
-		credentials.Password = prompt(logger, nonInteractive, "vault password")
+		credentials.Password = prompt(logger, flagNonInteractive, "vault password")
 	}
 
 	return credentials
 }
 
 // NewVault : Create new instance of vault and load vault info
-func NewVault(vaultPath string, logLevel logrus.Level, nocolorFlag bool) (*Vault, error) {
+func NewVault(vaultPath string, logLevel logrus.Level, flagNoColor bool) (*Vault, error) {
 	v := Vault{
-		logger:       *util.ConfigureLogger(logLevel, nocolorFlag),
+		logger:       *util.ConfigureLogger(logLevel, flagNoColor),
 		FilterFields: []string{"title", "subtitle"},
 	}
 	v.logger.SetLevel(logLevel)
@@ -237,9 +231,9 @@ func NewVault(vaultPath string, logLevel logrus.Level, nocolorFlag bool) (*Vault
 	return &v, nil
 }
 
-func (v *Vault) openEncryptedDatabase(path string, dbKey []byte, logLevel logrus.Level, nocolorFlag bool) (err error) {
+func (v *Vault) openEncryptedDatabase(path string, dbKey []byte, logLevel logrus.Level, flagNoColor bool) (err error) {
 	colorful := true
-	if nocolorFlag {
+	if flagNoColor {
 		colorful = false
 	}
 	var levelMap = map[logrus.Level]logger.LogLevel{
@@ -308,14 +302,14 @@ func (v *Vault) generateAndSetDBKey(credentials *VaultCredentials) error {
 		return errors.New("empty vault password provided")
 	}
 
-	if credentials.KeyfilePath == "" && v.vaultInfo.HasKeyfile == 1 {
+	if credentials.flagKeyFilePath == "" && v.vaultInfo.HasKeyfile == 1 {
 		return errors.New("you should specify a keyfile")
-	} else if credentials.KeyfilePath != "" && v.vaultInfo.HasKeyfile == 0 {
+	} else if credentials.flagKeyFilePath != "" && v.vaultInfo.HasKeyfile == 0 {
 		return errors.New("you are specifying an unnecessary keyfile")
 	}
 
 	v.logger.Debug("generating master password")
-	masterPassword, err := v.generateMasterPassword([]byte(credentials.Password), credentials.KeyfilePath)
+	masterPassword, err := v.generateMasterPassword([]byte(credentials.Password), credentials.flagKeyFilePath)
 	if err != nil {
 		return errors.Wrap(err, "could not generate vault unlock key")
 	}
@@ -336,14 +330,14 @@ func (v *Vault) generateAndSetDBKey(credentials *VaultCredentials) error {
 }
 
 // Open : setup a connection to the Enpass database. Call this before doing anything.
-func (v *Vault) Open(credentials *VaultCredentials, logLevel logrus.Level, nocolorFlag bool) error {
+func (v *Vault) Open(credentials *VaultCredentials, logLevel logrus.Level, flagNoColor bool) error {
 	v.logger.Debug("generating database key")
 	if err := v.generateAndSetDBKey(credentials); err != nil {
 		return errors.Wrap(err, "could not generate database key")
 	}
 
 	v.logger.Debug("opening encrypted database")
-	if err := v.openEncryptedDatabase(v.databaseFilename, credentials.DBKey, logLevel, nocolorFlag); err != nil {
+	if err := v.openEncryptedDatabase(v.databaseFilename, credentials.DBKey, logLevel, flagNoColor); err != nil {
 		return errors.Wrap(err, "could not open encrypted database")
 	}
 
@@ -376,13 +370,13 @@ func (v *Vault) Close() {
 	// }
 }
 
-// GetEntries : return the cardType entries in the Enpass database filtered by option flags.
-func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
+// GetEntries : return the flagCardType entries in the Enpass database filtered by option flags.
+func (v *Vault) GetEntries(flagCardType string, flagRecordCategory, flagRecordTitle, flagRecordLogin, flagRecordUuid, flagLabel []string, flagCaseSensitive bool, flagOrderBy []string, validOrderBy []string) ([]Card, error) {
 	if v.db == nil || v.vaultInfo.VaultName == "" {
 		return nil, errors.New("vault is not initialized")
 	}
 
-	rows, err := v.executeEntryQuery(cardType, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel, caseSensitive, orderbyFlag)
+	rows, err := v.executeEntryQuery(flagCardType, flagRecordCategory, flagRecordTitle, flagRecordLogin, flagRecordUuid, flagLabel, flagCaseSensitive, flagOrderBy, validOrderBy)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards from database")
 	}
@@ -395,9 +389,9 @@ func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordL
 		}
 		cards = append(cards, Card{
 			UUID:           card.UUID,
-			CreatedAt:      card.CreatedAt,
+			Created:        card.Created,
 			Type:           card.Type,
-			UpdatedAt:      card.UpdatedAt,
+			Updated:        card.Updated,
 			Title:          card.Title,
 			Subtitle:       card.Subtitle,
 			Note:           card.Note,
@@ -415,8 +409,8 @@ func (v *Vault) GetEntries(cardType string, recordCategory, recordTitle, recordL
 	return cards, nil
 }
 
-func (v *Vault) GetEntry(cardType string, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel []string, caseSensitive bool, orderbyFlag []string, unique bool) (*Card, error) {
-	cards, err := v.GetEntries(cardType, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel, caseSensitive, orderbyFlag)
+func (v *Vault) GetEntry(flagCardType string, flagRecordCategory, flagRecordTitle, flagRecordLogin, flagRecordUuid, flagLabel []string, flagCaseSensitive bool, flagOrderBy []string, validOrderBy []string, unique bool) (*Card, error) {
+	cards, err := v.GetEntries(flagCardType, flagRecordCategory, flagRecordTitle, flagRecordLogin, flagRecordUuid, flagLabel, flagCaseSensitive, flagOrderBy, validOrderBy)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve cards")
 	}
@@ -441,14 +435,14 @@ func (v *Vault) GetEntry(cardType string, recordCategory, recordTitle, recordLog
 	return ret, nil
 }
 
-func (v *Vault) processFilters(filterList []string, columnName string, caseSensitive bool) (tx *gorm.DB) {
+func (v *Vault) processFilters(filterList []string, columnName string, flagCaseSensitive bool) (tx *gorm.DB) {
 	var keyword string
 	tx = v.db.Session(&gorm.Session{NewDB: true})
 
 	if len(filterList) > 0 {
 		for _, item := range filterList {
 			keyword = "LIKE"
-			if caseSensitive {
+			if flagCaseSensitive {
 				keyword = "GLOB"
 				item = strings.Replace(item, "%", "*", -1)
 			}
@@ -461,21 +455,46 @@ func (v *Vault) processFilters(filterList []string, columnName string, caseSensi
 	return tx
 }
 
-func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, recordLogin, recordUuid, recordFieldLabel []string, caseSensitive bool, orderbyFlag []string) ([]Card, error) {
-	query := v.db.Select("item.uuid", "itemField.type", "item.created_at", "item.field_updated_at", "item.title", "item.subtitle", "item.note", "item.trashed", "item.deleted", "item.category", "itemfield.label", "itemfield.value AS raw_value", "item.key", "item.last_used", "itemfield.sensitive", "item.icon").Table("item").Joins("INNER JOIN itemfield ON uuid = item_uuid")
+func (v *Vault) executeEntryQuery(flagCardType string, flagRecordCategory, flagRecordTitle, flagRecordLogin, flagRecordUuid, flagLabel []string, flagCaseSensitive bool, flagOrderBy []string, validOrderBy []string) (cards []Card, err error) {
+	var (
+		configDefaultLabels []string
+		configOrderByFields []string
+		labels              []string = []string{}
+		orderByFields       []string = []string{}
+	)
+
+	if len(flagOrderBy) > 0 {
+		orderByFields = flagOrderBy
+	} else if len(flagOrderBy) <= 0 {
+		configOrderByFields = globals.GetConfig().OrderBy
+		if len(configOrderByFields) > 0 {
+			orderByFields = configOrderByFields
+		}
+	}
+
+	if len(flagLabel) > 0 {
+		labels = flagLabel
+	} else if len(flagLabel) <= 0 {
+		configDefaultLabels = globals.GetConfig().DefaultLabels
+		if len(configDefaultLabels) > 0 {
+			labels = configDefaultLabels
+		}
+	}
+
+	query := v.db.Select("item.uuid", "itemField.type", "item.created_at AS created", "item.updated_at AS updated", "item.title", "item.subtitle", "item.note", "item.trashed", "item.deleted", "item.category", "itemfield.label", "itemfield.value AS raw_value", "item.key", "item.last_used", "itemfield.sensitive", "item.icon").Table("item").Joins("INNER JOIN itemfield ON uuid = item_uuid")
 
 	query.Where("item.deleted = ?", 0)
-	query.Where("type = ?", cardType)
+	query.Where("type = ?", flagCardType)
 
-	query.Where(v.processFilters(recordCategory, "category", caseSensitive))
-	query.Where(v.processFilters(recordTitle, "title", caseSensitive))
-	query.Where(v.processFilters(recordLogin, "subtitle", caseSensitive))
-	query.Where(v.processFilters(recordUuid, "uuid", caseSensitive))
-	query.Where(v.processFilters(recordFieldLabel, "label", caseSensitive))
+	query.Where(v.processFilters(flagRecordCategory, "category", flagCaseSensitive))
+	query.Where(v.processFilters(flagRecordTitle, "title", flagCaseSensitive))
+	query.Where(v.processFilters(flagRecordLogin, "subtitle", flagCaseSensitive))
+	query.Where(v.processFilters(flagRecordUuid, "uuid", flagCaseSensitive))
+	query.Where(v.processFilters(labels, "label", flagCaseSensitive))
 
-	if len(orderbyFlag) > 0 {
-		badFields := funk.SubtractString(orderbyFlag, validFields)
-		goodFields := funk.IntersectString(orderbyFlag, validFields)
+	if len(orderByFields) > 0 {
+		badFields := funk.SubtractString(orderByFields, validOrderBy)
+		goodFields := funk.IntersectString(orderByFields, validOrderBy)
 		if len(badFields) > 0 {
 			v.logger.Warningf("the following fields cannot be used by --orderby: %s\n", strings.Join(badFields, ", "))
 			if len(goodFields) <= 0 {
@@ -490,5 +509,26 @@ func (v *Vault) executeEntryQuery(cardType string, recordCategory, recordTitle, 
 
 	query.Find(&rows)
 
-	return rows, nil
+	for i := range rows {
+		cards = append(cards, Card{
+			UUID:           rows[i].UUID,
+			Created:        util.ToHuman(rows[i].Created),
+			Type:           rows[i].Type,
+			Updated:        util.ToHuman(rows[i].Updated),
+			Title:          rows[i].Title,
+			Subtitle:       rows[i].Subtitle,
+			Note:           rows[i].Note,
+			Trashed:        rows[i].Trashed,
+			Deleted:        rows[i].Deleted,
+			Category:       rows[i].Category,
+			Label:          rows[i].Label,
+			LastUsed:       util.ToHuman(rows[i].LastUsed),
+			Icon:           rows[i].Icon,
+			DecryptedValue: rows[i].DecryptedValue,
+			RawValue:       rows[i].RawValue,
+			Key:            rows[i].Key,
+		})
+	}
+
+	return cards, nil
 }
