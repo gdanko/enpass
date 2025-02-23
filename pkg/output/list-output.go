@@ -8,11 +8,12 @@ import (
 	"github.com/gdanko/enpass/pkg/enpass"
 )
 
-func doListOutput(cards []enpass.Card, cmdType string, nocolorFlag bool) {
+func doListOutput(cards []enpass.Card, cmdType string, flagNoColor bool) {
 	for i, cardItem := range cards {
-		if nocolorFlag {
+		if flagNoColor {
 			fmt.Printf("%s = %s\n", "           uuid", cardItem.UUID)
-			fmt.Printf("%s = %d\n", "        created", cardItem.CreatedAt)
+			fmt.Printf("%s = %s\n", "        created", cardItem.Created)
+			fmt.Printf("%s = %s\n", "        updated", cardItem.Updated)
 			fmt.Printf("%s = %s\n", "      card_type", cardItem.Type)
 			fmt.Printf("%s = %s\n", "          title", cardItem.Title)
 			fmt.Printf("%s = %s\n", "          login", cardItem.Subtitle)
@@ -21,7 +22,7 @@ func doListOutput(cards []enpass.Card, cmdType string, nocolorFlag bool) {
 			}
 			fmt.Printf("%s = %s\n", "       category", cardItem.Category)
 			fmt.Printf("%s = %s\n", "          label", cardItem.Label)
-			fmt.Printf("%s = %d\n", "      last_used", cardItem.LastUsed)
+			fmt.Printf("%s = %s\n", "      last_used", cardItem.LastUsed)
 			fmt.Printf("%s = %v\n", "      sensitive", cardItem.Sensitive)
 			fmt.Printf("%s = %v\n", "           icon", cardItem.Icon)
 			if cmdType == "show" {
@@ -35,7 +36,8 @@ func doListOutput(cards []enpass.Card, cmdType string, nocolorFlag bool) {
 				stringColor = color.New(colorMap[globals.GetConfig().Colors.StringColor]).SprintFunc()
 			)
 			fmt.Printf("%s = %s\n", keyColor("           uuid"), stringColor(cardItem.UUID))
-			fmt.Printf("%s = %s\n", keyColor("        created"), numberColor(cardItem.CreatedAt))
+			fmt.Printf("%s = %s\n", keyColor("        created"), numberColor(cardItem.Created))
+			fmt.Printf("%s = %s\n", keyColor("        updated"), numberColor(cardItem.Updated))
 			fmt.Printf("%s = %s\n", keyColor("      card_type"), stringColor(cardItem.Type))
 			fmt.Printf("%s = %s\n", keyColor("          title"), stringColor(cardItem.Title))
 			fmt.Printf("%s = %s\n", keyColor("       subtitle"), stringColor(cardItem.Subtitle))
