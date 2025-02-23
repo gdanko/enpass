@@ -26,14 +26,14 @@ func format(attr color.Attribute) string {
 	return fmt.Sprintf("%s[%dm", escape, attr)
 }
 
-func doYamlOutput(logger *logrus.Logger, cards []enpass.Card, nocolorFlag bool) {
+func doYamlOutput(logger *logrus.Logger, cards []enpass.Card, flagNoColor bool) {
 	yamlBytes, err = yaml.Marshal(cards)
 	if err != nil {
 		logger.Errorf("failed to parse the output to YAML, %s", err)
 		logger.Exit(2)
 	}
 
-	if nocolorFlag {
+	if flagNoColor {
 		yamlString = string(yamlBytes)
 		yamlString = strings.TrimSpace(yamlString)
 		fmt.Println(yamlString)
