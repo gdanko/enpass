@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/gdanko/enpass/globals"
 	"github.com/sirupsen/logrus"
@@ -40,9 +41,9 @@ func ReturnLogLevels(levelMap map[string]logrus.Level) string {
 }
 
 // ConfigureLogger : Configure the logger
-func ConfigureLogger(logLevel logrus.Level, nocolorFlag bool) (logger *logrus.Logger) {
+func ConfigureLogger(logLevel logrus.Level, flagNoColor bool) (logger *logrus.Logger) {
 	disableColors := false
-	if nocolorFlag {
+	if flagNoColor {
 		disableColors = true
 	}
 	logger = &logrus.Logger{
@@ -93,4 +94,10 @@ func ParseConfig(path string) (enpassConfig globals.EnpassConfig, err error) {
 	}
 
 	return enpassConfig, nil
+}
+
+func ToHuman(timestamp int64) string {
+	t := time.Unix(timestamp, 0)
+	customFormat := "2006-01-02 15:04:05 MST"
+	return t.Format(customFormat)
 }
